@@ -11,11 +11,11 @@ type ZohoCustomer = {
 
 type ZohoVehicle = {
   id: string;
-  Year?: string;
+  Name?: string;
   Make?: string;
   Model?: string;
-  VIN?: string;
-  Customer?: { id: string } | null;
+  Vin?: string;
+  Owner1?: { id: string } | null;
 };
 
 type ZohoDeal = {
@@ -59,11 +59,11 @@ export const normalizeCustomer = (z: ZohoCustomer): Customer => ({
 
 export const normalizeVehicle = (z: ZohoVehicle): Vehicle => ({
   id: z.id,
-  year: z.Year || '',
+  year: z.Name || '',
   make: z.Make || '',
   model: z.Model || '',
-  vin: z.VIN || '',
-  customer_id: z.Customer?.id || '',
+  vin: z.Vin || '',
+  customer_id: z.Owner1?.id || '',
 });
 
 export const normalizeRepairOrder = (z: ZohoDeal): RepairOrder => ({

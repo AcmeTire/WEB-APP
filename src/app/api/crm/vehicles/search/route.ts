@@ -11,12 +11,12 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: 'vin is required' }, { status: 400 });
   }
 
-  const fields = ['id', 'Year', 'Make', 'Model', 'VIN', 'Customer'].join(',');
+  const fields = ['id', 'Name', 'Make', 'Model', 'Vin', 'Owner1'].join(',');
 
   try {
     const resp = await makeZohoServerRequest<ZohoListResponse<any>>({
       method: 'GET',
-      endpoint: `/${VEHICLES_MODULE}/search?criteria=(VIN:equals:${encodeURIComponent(vin)})&fields=${encodeURIComponent(fields)}`,
+      endpoint: `/${VEHICLES_MODULE}/search?criteria=(Vin:equals:${encodeURIComponent(vin)})&fields=${encodeURIComponent(fields)}`,
     });
 
     const v = resp.data?.[0] ? normalizeVehicle(resp.data[0]) : null;

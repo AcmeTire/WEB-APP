@@ -27,6 +27,12 @@ export type RepairOrder = {
   updated_time: string;
 };
 
+export type ActiveRepairOrderItem = {
+  repairOrder: RepairOrder;
+  vehicle: Vehicle | null;
+  customer: Customer | null;
+};
+
 export type ZohoApiResponse<T> = {
   data: T[];
   info: {

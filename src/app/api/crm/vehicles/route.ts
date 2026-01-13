@@ -5,7 +5,7 @@ import { normalizeVehicle } from '../_shared';
 
 const VEHICLES_MODULE = 'Vehicles';
 
-const FIELDS = ['id', 'Year', 'Make', 'Model', 'VIN', 'Customer'].join(',');
+const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'Owner1'].join(',');
 
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
@@ -13,16 +13,16 @@ export const POST = async (req: NextRequest) => {
   const payload = {
     data: [
       {
-        Year: body?.year || '',
+        Name: body?.year || '',
         Make: body?.make || '',
         Model: body?.model || '',
-        VIN: body?.vin || '',
-        Customer: body?.customer_id || undefined,
+        Vin: body?.vin || '',
+        Owner1: body?.customer_id || undefined,
       },
     ],
   };
 
-  if (!payload.data[0].VIN) {
+  if (!payload.data[0].Vin) {
     return NextResponse.json({ error: 'vin is required' }, { status: 400 });
   }
 

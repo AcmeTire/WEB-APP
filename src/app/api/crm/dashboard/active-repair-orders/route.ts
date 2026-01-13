@@ -51,7 +51,7 @@ export const GET = async () => {
     const customersById: Record<string, any> = {};
 
     if (vehicleIds.length) {
-      const vFields = ['id', 'Year', 'Make', 'Model', 'VIN', 'Customer'].join(',');
+      const vFields = ['id', 'Name', 'Make', 'Model', 'Vin', 'Owner1'].join(',');
       const vs = await Promise.all(
         vehicleIds.map((id) =>
           makeZohoServerRequest<any>({
