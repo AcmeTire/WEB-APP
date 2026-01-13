@@ -31,22 +31,21 @@ type ZohoDeal = {
 };
 
 const normalizeRepairOrderStatus = (status: string | undefined): RepairOrderStatus => {
-  const s = (status || '').trim().toLowerCase();
+  const s = (status || '').trim();
 
-  if (s === 'new') return 'New';
-  if (s === 'in progress' || s === 'diagnosing') return 'In Progress';
-  if (s === 'completed' || s === 'ready for pickup') return 'Completed';
-
-  if (
-    s === 'scheduled' ||
-    s === 'dropped off' ||
-    s === 'waiting approval' ||
-    s.includes('waiting')
-  ) {
-    return 'Waiting';
+  switch (s) {
+    case 'New':
+    case 'Scheduled':
+    case 'Dropped Off':
+    case 'Diagnosing':
+    case 'Waiting Approval':
+    case 'In Progress':
+    case 'Ready For Pickup':
+    case 'Completed':
+      return s;
+    default:
+      return 'New';
   }
-
-  return 'New';
 };
 
 export const normalizeCustomer = (z: ZohoCustomer): Customer => ({

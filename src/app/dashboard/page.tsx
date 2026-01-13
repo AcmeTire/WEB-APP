@@ -12,10 +12,16 @@
    switch (status) {
      case 'New':
        return 'bg-blue-50 text-blue-700 ring-blue-200';
+     case 'Scheduled':
+     case 'Dropped Off':
+       return 'bg-purple-50 text-purple-700 ring-purple-200';
+     case 'Diagnosing':
+     case 'Waiting Approval':
+       return 'bg-amber-50 text-amber-800 ring-amber-200';
      case 'In Progress':
        return 'bg-amber-50 text-amber-800 ring-amber-200';
-     case 'Waiting':
-       return 'bg-purple-50 text-purple-700 ring-purple-200';
+     case 'Ready For Pickup':
+       return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
      case 'Completed':
        return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
      default:

@@ -15,7 +15,15 @@ export type Vehicle = {
   customer_id: string;
 };
 
-export type RepairOrderStatus = 'New' | 'In Progress' | 'Waiting' | 'Completed';
+export type RepairOrderStatus =
+  | 'New'
+  | 'Scheduled'
+  | 'Dropped Off'
+  | 'Diagnosing'
+  | 'Waiting Approval'
+  | 'In Progress'
+  | 'Ready For Pickup'
+  | 'Completed';
 
 export type RepairOrder = {
   id: string;
