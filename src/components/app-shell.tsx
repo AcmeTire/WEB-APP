@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import logo from '../../acme tire x dyligent.png';
+import GlobalSearch from '@/components/global-search';
 
 type NavItem = {
   label: string;
@@ -52,6 +53,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               {collapsed ? '>' : '<'}
             </button>
           </div>
+
+          {!collapsed ? (
+            <div className="px-4 pb-4">
+              <GlobalSearch placeholder="Search…" />
+            </div>
+          ) : null}
 
           <nav className="px-2 pb-4">
             {items.map((item) => {

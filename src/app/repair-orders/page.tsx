@@ -5,6 +5,7 @@ import type { ActiveRepairOrderItem, RepairOrderStatus } from '@/types';
 import { useRepairOrdersEnriched } from '@/hooks/use-repair-orders-enriched';
 import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
 import { useCheckInVin } from '@/hooks/use-check-in-vin';
+import GlobalSearch from '@/components/global-search';
 
 const statusBadgeClasses = (status: RepairOrderStatus) => {
   switch (status) {
@@ -307,6 +308,8 @@ export default function RepairOrdersPage() {
           New Repair Order
         </a>
       </div>
+
+      <GlobalSearch placeholder="Search customers, vehicles, repair orders…" />
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-sm font-medium text-slate-300" htmlFor="status">
