@@ -1,6 +1,6 @@
  'use client';
 
- import { useEffect, useMemo, useState } from 'react';
+ import { use, useEffect, useMemo, useState } from 'react';
  import type { RepairOrderStatus } from '@/types';
  import { useRepairOrder } from '@/hooks/use-repair-order';
  import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
@@ -17,8 +17,12 @@
    'Completed',
  ];
 
- export default function RepairOrderDetailPage({ params }: { params: { id: string } }) {
-   const id = params.id;
+ export default function RepairOrderDetailPage({
+   params,
+ }: {
+   params: Promise<{ id: string }>;
+ }) {
+   const { id } = use(params);
    const { data, isLoading, isError, error } = useRepairOrder(id);
    const update = useUpdateRepairOrder();
    const checkInVin = useCheckInVin();

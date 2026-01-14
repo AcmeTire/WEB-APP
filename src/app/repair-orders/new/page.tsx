@@ -88,7 +88,7 @@
        note: note.trim() || undefined,
      });
 
-     router.push(`/repair-orders/${ro.id}`);
+     router.push('/repair-orders');
    };
 
    const busy =
