@@ -4,6 +4,7 @@
  import type { RepairOrderStatus } from '@/types';
  import { useRepairOrder } from '@/hooks/use-repair-order';
  import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
+ import { useCheckInVin } from '@/hooks/use-check-in-vin';
 
  const STATUS_OPTIONS: RepairOrderStatus[] = [
    'New',
@@ -20,21 +21,32 @@
    const id = params.id;
    const { data, isLoading, isError, error } = useRepairOrder(id);
    const update = useUpdateRepairOrder();
+   const checkInVin = useCheckInVin();
 
    const [status, setStatus] = useState<RepairOrderStatus>('New');
-   const [notes, setNotes] = useState<string>('');
+   const [serviceType, setServiceType] = useState<string>('');
+   const [jobDescription, setJobDescription] = useState<string>('');
+   const [note, setNote] = useState<string>('');
+   const [vin, setVin] = useState<string>('');
 
    useEffect(() => {
      if (data) {
        setStatus(data.status);
-       setNotes(data.notes || '');
+       setServiceType(data.service_type || '');
+       setJobDescription(data.job_description || '');
+       setNote(data.note || '');
      }
    }, [data]);
 
    const canSave = useMemo(() => {
      if (!data) return false;
-     return status !== data.status || (notes || '') !== (data.notes || '');
-   }, [data, notes, status]);
+     return (
+       status !== data.status ||
+       (serviceType || '') !== (data.service_type || '') ||
+       (jobDescription || '') !== (data.job_description || '') ||
+       (note || '') !== (data.note || '')
+     );
+   }, [data, jobDescription, note, serviceType, status]);
 
    return (
      <div className="space-y-6">
@@ -69,20 +81,70 @@
                </select>
              </div>
              <div>
-               <div className="text-xs font-medium text-gray-600">Service</div>
-               <div className="mt-2 text-sm text-gray-900">{data.service_type || ''}</div>
+               <div className="text-xs font-medium text-gray-600">Service type</div>
+               <input
+                 className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                 value={serviceType}
+                 onChange={(e) => setServiceType(e.target.value)}
+               />
                <div className="mt-1 text-xs text-gray-500">Vehicle ID: {data.vehicle_id}</div>
              </div>
            </div>
 
            <div>
-             <div className="text-xs font-medium text-gray-600">Notes</div>
+             <div className="text-xs font-medium text-gray-600">Job description</div>
              <textarea
                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                rows={6}
-               value={notes}
-               onChange={(e) => setNotes(e.target.value)}
+               value={jobDescription}
+               onChange={(e) => setJobDescription(e.target.value)}
              />
+           </div>
+
+           <div>
+             <div className="text-xs font-medium text-gray-600">Note</div>
+             <textarea
+               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+               rows={3}
+               value={note}
+               onChange={(e) => setNote(e.target.value)}
+             />
+           </div>
+
+           <div className="rounded-md border bg-gray-50 p-4 space-y-3">
+             <div className="text-sm font-medium text-gray-900">Check-in / Add VIN</div>
+             <div className="text-xs text-gray-600">
+               Enter VIN when the vehicle is physically present. If that VIN already exists in CRM, this will re-link the
+               repair order to the existing vehicle. Otherwise it saves the VIN onto the current vehicle.
+             </div>
+             <div className="flex flex-wrap items-end gap-3">
+               <div>
+                 <div className="text-xs font-medium text-gray-600">VIN</div>
+                 <input
+                   className="mt-1 w-80 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                   value={vin}
+                   onChange={(e) => setVin(e.target.value)}
+                   placeholder="Enter VIN"
+                 />
+               </div>
+               <button
+                 className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                 disabled={!vin.trim() || checkInVin.isPending}
+                 onClick={() => checkInVin.mutate({ repair_order_id: id, vin })}
+               >
+                 {checkInVin.isPending ? 'Saving…' : 'Save VIN'}
+               </button>
+             </div>
+             {checkInVin.isError ? (
+               <div className="text-sm text-red-700">Failed to save VIN</div>
+             ) : null}
+             {checkInVin.isSuccess ? (
+               <div className="text-sm text-emerald-700">
+                 {checkInVin.data.action === 'linked_existing_vehicle'
+                   ? 'VIN matched an existing vehicle. Repair order linked.'
+                   : 'VIN saved to vehicle.'}
+               </div>
+             ) : null}
            </div>
 
            <div className="flex flex-wrap items-center justify-between gap-3">
@@ -99,7 +161,15 @@
                <button
                  className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
                  disabled={!canSave || update.isPending}
-                 onClick={() => update.mutate({ id, status, notes })}
+                 onClick={() =>
+                   update.mutate({
+                     id,
+                     status,
+                     service_type: serviceType,
+                     job_description: jobDescription,
+                     note,
+                   })
+                 }
                >
                  {update.isPending ? 'Saving…' : 'Save'}
                </button>

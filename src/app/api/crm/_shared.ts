@@ -15,6 +15,7 @@ type ZohoVehicle = {
   Make?: string;
   Model?: string;
   Vin?: string;
+  License_Plate?: string;
   Owner1?: { id: string } | null;
 };
 
@@ -62,6 +63,7 @@ export const normalizeVehicle = (z: ZohoVehicle): Vehicle => ({
   make: z.Make || '',
   model: z.Model || '',
   vin: z.Vin || '',
+  license_plate: z.License_Plate || undefined,
   customer_id: z.Owner1?.id || '',
 });
 
@@ -70,6 +72,8 @@ export const normalizeRepairOrder = (z: ZohoDeal): RepairOrder => ({
   vehicle_id: z.Vehicle?.id || '',
   status: normalizeRepairOrderStatus(z.Status),
   service_type: z.Name || '',
+  job_description: z.Job_Description || undefined,
+  note: z.Note || undefined,
   notes: z.Note || z.Job_Description || undefined,
   created_time: z.Created_Time || '',
   updated_time: z.Modified_Time || '',

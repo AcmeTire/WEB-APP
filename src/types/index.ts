@@ -12,6 +12,7 @@ export type Vehicle = {
   make: string;
   model: string;
   vin: string;
+  license_plate?: string;
   customer_id: string;
 };
 
@@ -30,6 +31,8 @@ export type RepairOrder = {
   vehicle_id: string;
   status: RepairOrderStatus;
   service_type: string;
+  job_description?: string;
+  note?: string;
   notes?: string;
   created_time: string;
   updated_time: string;

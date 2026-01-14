@@ -51,6 +51,8 @@ export const POST = async (req: NextRequest) => {
   const vehicleId = body?.vehicle_id;
   const status = body?.status;
   const serviceType = body?.service_type;
+  const jobDescription = body?.job_description;
+  const note = body?.note;
   const notes = body?.notes;
   const customerId = body?.customer_id;
 
@@ -63,8 +65,8 @@ export const POST = async (req: NextRequest) => {
       {
         Name: serviceType || `RO-${Date.now()}`,
         Status: status || 'New',
-        Note: notes || '',
-        Job_Description: notes || '',
+        Note: note || notes || '',
+        Job_Description: jobDescription || notes || '',
         Vehicle: vehicleId,
         ...(customerId ? { Customer: customerId } : {}),
       },

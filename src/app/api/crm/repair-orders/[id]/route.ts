@@ -43,6 +43,8 @@ export const PATCH = async (req: NextRequest, ctx: { params: Promise<{ id: strin
         id,
         ...(body?.status ? { Status: body.status } : {}),
         ...(body?.service_type ? { Name: body.service_type } : {}),
+        ...(body?.note !== undefined ? { Note: body.note } : {}),
+        ...(body?.job_description !== undefined ? { Job_Description: body.job_description } : {}),
         ...(body?.notes !== undefined ? { Note: body.notes, Job_Description: body.notes } : {}),
       },
     ],

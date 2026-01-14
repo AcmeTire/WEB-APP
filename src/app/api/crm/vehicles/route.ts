@@ -5,7 +5,7 @@ import { normalizeVehicle } from '../_shared';
 
 const VEHICLES_MODULE = 'Vehicles';
 
-const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'Owner1'].join(',');
+const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Owner1'].join(',');
 
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
@@ -16,15 +16,12 @@ export const POST = async (req: NextRequest) => {
         Name: body?.year || '',
         Make: body?.make || '',
         Model: body?.model || '',
-        Vin: body?.vin || '',
+        ...(body?.vin ? { Vin: body.vin } : {}),
+        ...(body?.license_plate ? { License_Plate: body.license_plate } : {}),
         Owner1: body?.customer_id || undefined,
       },
     ],
   };
-
-  if (!payload.data[0].Vin) {
-    return NextResponse.json({ error: 'vin is required' }, { status: 400 });
-  }
 
   try {
     const created = await makeZohoServerRequest<any>({

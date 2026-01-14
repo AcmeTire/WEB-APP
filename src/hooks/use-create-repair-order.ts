@@ -13,6 +13,8 @@ type CreateRepairOrderInput = {
   customer_id?: string;
   status?: RepairOrderStatus;
   service_type?: string;
+  job_description?: string;
+  note?: string;
   notes?: string;
 };
 
