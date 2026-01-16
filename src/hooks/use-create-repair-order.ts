@@ -16,6 +16,8 @@ type CreateRepairOrderInput = {
   job_description?: string;
   note?: string;
   notes?: string;
+  estimated_total?: number;
+  final_charge_total?: number;
 };
 
 export const useCreateRepairOrder = () => {

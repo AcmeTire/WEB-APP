@@ -34,6 +34,8 @@ export type RepairOrder = {
   job_description?: string;
   note?: string;
   notes?: string;
+  estimated_total?: number;
+  final_charge_total?: number;
   created_time: string;
   updated_time: string;
 };

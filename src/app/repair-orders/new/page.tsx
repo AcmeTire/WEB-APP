@@ -1,42 +1,45 @@
  'use client';
 
- import { useMemo, useState } from 'react';
- import { useRouter } from 'next/navigation';
- import { useCustomerByPhone } from '@/hooks/use-customer-by-phone';
- import { useCreateCustomer } from '@/hooks/use-create-customer';
- import { useCreateVehicle } from '@/hooks/use-create-vehicle';
- import { useCreateRepairOrder } from '@/hooks/use-create-repair-order';
- import { useVehiclesByCustomer } from '@/hooks/use-vehicles-by-customer';
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCustomerByPhone } from '@/hooks/use-customer-by-phone';
+import { useCreateCustomer } from '@/hooks/use-create-customer';
+import { useCreateVehicle } from '@/hooks/use-create-vehicle';
+import { useCreateRepairOrder } from '@/hooks/use-create-repair-order';
+import { useVehiclesByCustomer } from '@/hooks/use-vehicles-by-customer';
+import type { Vehicle } from '@/types';
 
- export default function NewRepairOrderPage() {
-   const router = useRouter();
+export default function NewRepairOrderPage() {
+  const router = useRouter();
 
-   const [phone, setPhone] = useState('');
-   const [searchedPhone, setSearchedPhone] = useState<string | null>(null);
+  const [phone, setPhone] = useState('');
+  const [searchedPhone, setSearchedPhone] = useState<string | null>(null);
 
-   const customerQuery = useCustomerByPhone(searchedPhone || '');
-   const createCustomer = useCreateCustomer();
-   const createVehicle = useCreateVehicle();
-   const createRepairOrder = useCreateRepairOrder();
+  const customerQuery = useCustomerByPhone(searchedPhone || '');
+  const createCustomer = useCreateCustomer();
+  const createVehicle = useCreateVehicle();
+  const createRepairOrder = useCreateRepairOrder();
 
-   const [firstName, setFirstName] = useState('');
-   const [lastName, setLastName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
-   const [vehicleMode, setVehicleMode] = useState<'existing' | 'new'>('existing');
-   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  const [vehicleMode, setVehicleMode] = useState<'existing' | 'new'>('existing');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
 
-   const [serviceType, setServiceType] = useState('');
-   const [jobDescription, setJobDescription] = useState('');
-   const [note, setNote] = useState('');
+  const [serviceType, setServiceType] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [note, setNote] = useState('');
+  const [estimatedTotal, setEstimatedTotal] = useState('');
+  const [finalChargeTotal, setFinalChargeTotal] = useState('');
 
-   const [year, setYear] = useState('');
-   const [make, setMake] = useState('');
-   const [model, setModel] = useState('');
-   const [licensePlate, setLicensePlate] = useState('');
+  const [year, setYear] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [licensePlate, setLicensePlate] = useState('');
 
-   const selectedCustomer = customerQuery.data || null;
-   const vehiclesQuery = useVehiclesByCustomer(selectedCustomer?.id || '');
-   const vehicles = vehiclesQuery.data || [];
+  const selectedCustomer = customerQuery.data || null;
+  const vehiclesQuery = useVehiclesByCustomer(selectedCustomer?.id || '');
+  const vehicles: Vehicle[] = vehiclesQuery.data || [];
 
   const canSearch = useMemo(() => phone.trim().length >= 7, [phone]);
   const canCreateCustomer = useMemo(() => {
@@ -68,6 +71,9 @@
   const onCreate = async () => {
     if (!selectedCustomer?.id) return;
 
+    const estimatedTotalNum = Number(estimatedTotal);
+    const finalChargeTotalNum = Number(finalChargeTotal);
+
     const vehicleId =
       vehicleMode === 'existing'
         ? selectedVehicleId
@@ -86,6 +92,10 @@
       service_type: serviceType.trim(),
       job_description: jobDescription.trim() || undefined,
       note: note.trim() || undefined,
+      estimated_total: estimatedTotal.trim() ? (Number.isFinite(estimatedTotalNum) ? estimatedTotalNum : undefined) : undefined,
+      final_charge_total: finalChargeTotal.trim()
+        ? (Number.isFinite(finalChargeTotalNum) ? finalChargeTotalNum : undefined)
+        : undefined,
     });
 
     router.push('/repair-orders');
@@ -150,19 +160,23 @@
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <div className="text-xs font-medium text-slate-300">First name</div>
-                  <input
-                    className="input-dark mt-1"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                  />
+                  <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                    <input
+                      className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs font-medium text-slate-300">Last name</div>
-                  <input
-                    className="input-dark mt-1"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                  />
+                  <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                    <input
+                      className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
               <button
@@ -219,9 +233,42 @@
                 rows={3}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Internal note (optional)"
+                placeholder="Internal notes"
                 disabled={!selectedCustomer}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <div className="text-xs font-medium text-slate-300">Estimated Total</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none disabled:opacity-40"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={estimatedTotal}
+                  onChange={(e) => setEstimatedTotal(e.target.value)}
+                  placeholder="0.00"
+                  disabled={!selectedCustomer}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-300">Final Charge Total</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none disabled:opacity-40"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={finalChargeTotal}
+                  onChange={(e) => setFinalChargeTotal(e.target.value)}
+                  placeholder="0.00"
+                  disabled={!selectedCustomer}
+                />
+              </div>
             </div>
           </div>
         </div>

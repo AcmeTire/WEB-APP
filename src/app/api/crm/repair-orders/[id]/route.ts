@@ -11,6 +11,8 @@ const FIELDS = [
   'Status',
   'Note',
   'Job_Description',
+  'Estimated_Total',
+  'Final_Charge_Total',
   'Vehicle',
   'Customer',
   'Created_Time',
@@ -46,6 +48,8 @@ export const PATCH = async (req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(body?.note !== undefined ? { Note: body.note } : {}),
         ...(body?.job_description !== undefined ? { Job_Description: body.job_description } : {}),
         ...(body?.notes !== undefined ? { Note: body.notes, Job_Description: body.notes } : {}),
+        ...(typeof body?.estimated_total === 'number' ? { Estimated_Total: body.estimated_total } : {}),
+        ...(typeof body?.final_charge_total === 'number' ? { Final_Charge_Total: body.final_charge_total } : {}),
       },
     ],
   };

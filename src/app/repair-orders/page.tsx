@@ -64,6 +64,12 @@ const RepairOrderRow = ({
   const [serviceType, setServiceType] = useState(item.repairOrder.service_type || '');
   const [jobDescription, setJobDescription] = useState(item.repairOrder.job_description || '');
   const [note, setNote] = useState(item.repairOrder.note || '');
+  const [estimatedTotal, setEstimatedTotal] = useState(
+    item.repairOrder.estimated_total !== undefined ? String(item.repairOrder.estimated_total) : ''
+  );
+  const [finalChargeTotal, setFinalChargeTotal] = useState(
+    item.repairOrder.final_charge_total !== undefined ? String(item.repairOrder.final_charge_total) : ''
+  );
   const [vin, setVin] = useState(item.vehicle?.vin || '');
 
   const customerName = item.customer
@@ -77,7 +83,9 @@ const RepairOrderRow = ({
     status !== item.repairOrder.status ||
     (serviceType || '') !== (item.repairOrder.service_type || '') ||
     (jobDescription || '') !== (item.repairOrder.job_description || '') ||
-    (note || '') !== (item.repairOrder.note || '');
+    (note || '') !== (item.repairOrder.note || '') ||
+    (estimatedTotal.trim() ? Number(estimatedTotal) : undefined) !== item.repairOrder.estimated_total ||
+    (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== item.repairOrder.final_charge_total;
 
   return (
     <div className="px-4 py-3">
@@ -137,7 +145,7 @@ const RepairOrderRow = ({
             className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/15 px-4 py-1.5 text-sm font-semibold text-[#F6E7B7] backdrop-blur hover:bg-[#D4AF37]/22 active:bg-[#D4AF37]/28"
             onClick={() => setExpanded((v) => !v)}
           >
-            {expanded ? 'Close' : 'Edit'}
+            {expanded ? 'Close' : 'Open'}
           </button>
         </div>
       </div>
@@ -211,6 +219,37 @@ const RepairOrderRow = ({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-xs font-medium text-slate-300">Estimated Total</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={estimatedTotal}
+                  onChange={(e) => setEstimatedTotal(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-300">Final Charge Total</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={finalChargeTotal}
+                  onChange={(e) => setFinalChargeTotal(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2 rounded-lg border border-white/10 bg-white/3 p-3 backdrop-blur">
             <div className="text-xs font-medium text-slate-300">Check-in / Add VIN</div>
             <div className="flex flex-wrap items-end gap-3">
@@ -266,6 +305,16 @@ const RepairOrderRow = ({
                   service_type: serviceType,
                   job_description: jobDescription,
                   note,
+                  estimated_total: estimatedTotal.trim()
+                    ? Number.isFinite(Number(estimatedTotal))
+                      ? Number(estimatedTotal)
+                      : undefined
+                    : undefined,
+                  final_charge_total: finalChargeTotal.trim()
+                    ? Number.isFinite(Number(finalChargeTotal))
+                      ? Number(finalChargeTotal)
+                      : undefined
+                    : undefined,
                 })
               }
             >

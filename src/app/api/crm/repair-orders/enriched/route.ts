@@ -22,6 +22,8 @@ export const GET = async (req: NextRequest) => {
     'Status',
     'Note',
     'Job_Description',
+    'Estimated_Total',
+    'Final_Charge_Total',
     'Vehicle',
     'Customer',
     'Created_Time',
