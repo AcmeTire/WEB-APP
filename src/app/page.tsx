@@ -1,18 +1,24 @@
 import Image from 'next/image';
 import logo from '../../acme tire x dyligent.png';
+import GlobalSearch from '@/components/global-search';
 
 export default function HomePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col items-center text-center">
         <Image src={logo} alt="Acme Tire" className="h-14 w-auto" priority />
-        <p className="mt-3 text-base" style={{ color: '#d7b73f' }}>
-          Create and manage repair orders.
-        </p>
       </div>
 
+      <div className="relative z-50">
+        <GlobalSearch placeholder="Search customers, vehicles, repair orders…" className="w-full" />
+      </div>
+
+      <p className="text-center text-base" style={{ color: '#d7b73f' }}>
+        Create and manage repair orders.
+      </p>
+
       <a
-        className="group block w-full rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-8 py-6 text-center backdrop-blur transition hover:bg-[#D4AF37]/18 active:bg-[#D4AF37]/22"
+        className="group relative z-0 mt-6 block w-full rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-8 py-6 text-center backdrop-blur transition hover:bg-[#D4AF37]/18 active:bg-[#D4AF37]/22"
         href="/repair-orders/new"
       >
         <div className="text-2xl font-semibold" style={{ color: '#d7b73f' }}>
@@ -27,7 +33,7 @@ export default function HomePage() {
       </a>
 
       <a
-        className="group block w-full rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-8 py-6 text-center backdrop-blur transition hover:bg-[#D4AF37]/18 active:bg-[#D4AF37]/22"
+        className="group relative z-0 block w-full rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-8 py-6 text-center backdrop-blur transition hover:bg-[#D4AF37]/18 active:bg-[#D4AF37]/22"
         href="/repair-orders"
       >
         <div className="text-2xl font-semibold" style={{ color: '#d7b73f' }}>
