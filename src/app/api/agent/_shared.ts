@@ -116,12 +116,14 @@ export const zohoCreateCustomer = async (input: {
   last_name?: string;
   email?: string;
 }) => {
+  const safeLastName = (input.last_name || '').trim() || (input.first_name || '').trim() || 'Unknown';
+
   const payload = {
     data: [
       {
         Phone: input.phone,
         ...(input.first_name ? { First_Name: input.first_name } : {}),
-        ...(input.last_name ? { Last_Name: input.last_name } : {}),
+        Last_Name: safeLastName,
         ...(input.email ? { Email: input.email } : {}),
       },
     ],
