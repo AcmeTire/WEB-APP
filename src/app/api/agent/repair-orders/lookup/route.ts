@@ -58,6 +58,30 @@ const formatEstimatedCompletionText = (iso: string) => {
   return `${weekday} at ${timeText}`;
 };
 
+const formatStatusText = (status: string) => {
+  const s = (status || '').trim();
+  switch (s) {
+    case 'New':
+      return "We've created your repair order, and the team hasn't started work yet.";
+    case 'Scheduled':
+      return "You're scheduled—work is planned for your appointment time.";
+    case 'Dropped Off':
+      return "Your vehicle is checked in and waiting to be worked into the schedule.";
+    case 'Diagnosing':
+      return "We're inspecting the vehicle to confirm the issue and next steps.";
+    case 'Waiting Approval':
+      return "We're waiting on an approval before moving forward.";
+    case 'In Progress':
+      return 'Work is actively underway.';
+    case 'Ready For Pickup':
+      return 'Work is finished and the vehicle is ready to pick up.';
+    case 'Completed':
+      return 'The repair order is closed out as completed.';
+    default:
+      return '';
+  }
+};
+
 export const POST = async (req: NextRequest) => {
   const requestId = getRequestId(req);
   const auth = requireAgentKey(req);
@@ -225,6 +249,7 @@ export const POST = async (req: NextRequest) => {
           customerPhone: customer?.phone || '',
           estimatedCompletion: o.estimated_completion || '',
           estimatedCompletionText: formatEstimatedCompletionText(o.estimated_completion || ''),
+          statusText: formatStatusText(o.status),
         };
       })
       .filter(Boolean);
