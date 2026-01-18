@@ -16,6 +16,48 @@ const REPAIR_ORDERS_MODULE = 'Repair_Orders';
 
 const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
+const SHOP_TIME_ZONE = 'America/Detroit';
+
+const getYmdInTimeZone = (d: Date, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(d);
+
+  const year = parts.find((p) => p.type === 'year')?.value || '';
+  const month = parts.find((p) => p.type === 'month')?.value || '';
+  const day = parts.find((p) => p.type === 'day')?.value || '';
+  return `${year}-${month}-${day}`;
+};
+
+const formatEstimatedCompletionText = (iso: string) => {
+  const trimmed = (iso || '').trim();
+  if (!trimmed) return '';
+
+  const dt = new Date(trimmed);
+  if (Number.isNaN(dt.getTime())) return '';
+
+  const now = new Date();
+  const ymd = getYmdInTimeZone(dt, SHOP_TIME_ZONE);
+  const today = getYmdInTimeZone(now, SHOP_TIME_ZONE);
+  const tomorrow = getYmdInTimeZone(new Date(now.getTime() + 24 * 60 * 60 * 1000), SHOP_TIME_ZONE);
+
+  const timeText = new Intl.DateTimeFormat('en-US', {
+    timeZone: SHOP_TIME_ZONE,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(dt);
+
+  if (ymd === today) return `Today at ${timeText}`;
+  if (ymd === tomorrow) return `Tomorrow at ${timeText}`;
+
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: SHOP_TIME_ZONE, weekday: 'long' }).format(dt);
+  return `${weekday} at ${timeText}`;
+};
+
 export const POST = async (req: NextRequest) => {
   const requestId = getRequestId(req);
   const auth = requireAgentKey(req);
@@ -182,6 +224,7 @@ export const POST = async (req: NextRequest) => {
           customerName,
           customerPhone: customer?.phone || '',
           estimatedCompletion: o.estimated_completion || '',
+          estimatedCompletionText: formatEstimatedCompletionText(o.estimated_completion || ''),
         };
       })
       .filter(Boolean);
