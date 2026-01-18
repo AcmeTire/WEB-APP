@@ -14,6 +14,8 @@ const CONTACTS_MODULE = 'Contacts';
 const VEHICLES_MODULE = 'Vehicles';
 const REPAIR_ORDERS_MODULE = 'Repair_Orders';
 
+const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
+
 export const POST = async (req: NextRequest) => {
   const requestId = getRequestId(req);
   const auth = requireAgentKey(req);
@@ -88,6 +90,9 @@ export const POST = async (req: NextRequest) => {
 
     const orders = (resp.data || []).map(normalizeRepairOrder);
     const vehicleIds = Array.from(new Set(orders.map((o) => o.vehicle_id).filter(Boolean)));
+    const customerIdsFromOrders = Array.from(
+      new Set(orders.map((o) => o.customer_id).filter(isNonEmptyString))
+    );
 
     const vehiclesById: Record<string, any> = {};
     const customersById: Record<string, any> = {};
@@ -130,12 +135,34 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
+    if (customerIdsFromOrders.length) {
+      const cFields = ['id', 'First_Name', 'Last_Name', 'Phone', 'Email'].join(',');
+      const missing = customerIdsFromOrders.filter((id) => !customersById[id]);
+
+      if (missing.length) {
+        const cs = await Promise.all(
+          missing.map((id) =>
+            makeZohoServerRequest<any>({
+              method: 'GET',
+              endpoint: `/${CONTACTS_MODULE}/${id}?fields=${encodeURIComponent(cFields)}`,
+            })
+          )
+        );
+
+        cs.forEach((r) => {
+          const c = r?.data?.[0];
+          if (c?.id) customersById[c.id] = normalizeCustomer(c);
+        });
+      }
+    }
+
     const items = orders
       .map((o) => {
         const vehicle = vehiclesById[o.vehicle_id] || null;
-        const customer = vehicle?.customer_id ? customersById[vehicle.customer_id] || null : null;
+        const linkedCustomerId = vehicle?.customer_id || o.customer_id || '';
+        const customer = linkedCustomerId ? customersById[linkedCustomerId] || null : null;
 
-        if (resolvedCustomerId && customer?.id !== resolvedCustomerId) return null;
+        if (resolvedCustomerId && linkedCustomerId !== resolvedCustomerId) return null;
 
         const vehicleDisplay = vehicle ? [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ') : '';
         const customerName = customer ? `${customer.first_name} ${customer.last_name}`.trim() : '';

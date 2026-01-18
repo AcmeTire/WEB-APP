@@ -72,6 +72,7 @@ export const normalizeVehicle = (z: ZohoVehicle): Vehicle => ({
 export const normalizeRepairOrder = (z: ZohoDeal): RepairOrder => ({
   id: z.id,
   vehicle_id: z.Vehicle?.id || '',
+  customer_id: z.Customer?.id || '',
   status: normalizeRepairOrderStatus(z.Status),
   service_type: z.Name || '',
   job_description: z.Job_Description || undefined,

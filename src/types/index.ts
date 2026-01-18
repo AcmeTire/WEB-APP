@@ -29,6 +29,7 @@ export type RepairOrderStatus =
 export type RepairOrder = {
   id: string;
   vehicle_id: string;
+  customer_id?: string;
   status: RepairOrderStatus;
   service_type: string;
   job_description?: string;
