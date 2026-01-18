@@ -153,7 +153,7 @@ export const POST = async (req: NextRequest) => {
 
     auditLog({ requestId, action: 'repair_orders.lookup', success: true, status: 200, customerId: resolvedCustomerId || undefined });
 
-    return NextResponse.json({ data: items, requestId });
+    return NextResponse.json({ data: items, count: items.length, requestId });
   } catch (err: any) {
     auditLog({ requestId, action: 'repair_orders.lookup', success: false, status: 500, error: 'zoho_error' });
     return jsonError(500, 'Failed to lookup repair orders');
