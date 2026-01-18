@@ -6,6 +6,26 @@
  import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
  import { useCheckInVin } from '@/hooks/use-check-in-vin';
 
+ const isoToDatetimeLocal = (iso: string) => {
+   if (!iso) return '';
+   const d = new Date(iso);
+   if (Number.isNaN(d.getTime())) return '';
+   const pad = (n: number) => String(n).padStart(2, '0');
+   const yyyy = d.getFullYear();
+   const mm = pad(d.getMonth() + 1);
+   const dd = pad(d.getDate());
+   const hh = pad(d.getHours());
+   const mi = pad(d.getMinutes());
+   return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+ };
+
+ const datetimeLocalToIso = (value: string) => {
+   if (!value) return '';
+   const d = new Date(value);
+   if (Number.isNaN(d.getTime())) return '';
+   return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+ };
+
 const STATUS_OPTIONS: RepairOrderStatus[] = [
   'New',
   'Scheduled',
@@ -33,6 +53,7 @@ export default function RepairOrderDetailPage({
   const [note, setNote] = useState<string>('');
   const [estimatedTotal, setEstimatedTotal] = useState<string>('');
   const [finalChargeTotal, setFinalChargeTotal] = useState<string>('');
+  const [estimatedCompletion, setEstimatedCompletion] = useState<string>('');
   const [vin, setVin] = useState<string>('');
 
   useEffect(() => {
@@ -43,6 +64,7 @@ export default function RepairOrderDetailPage({
       setNote(data.note || '');
       setEstimatedTotal(data.estimated_total !== undefined ? String(data.estimated_total) : '');
       setFinalChargeTotal(data.final_charge_total !== undefined ? String(data.final_charge_total) : '');
+      setEstimatedCompletion(isoToDatetimeLocal(data.estimated_completion || ''));
     }
   }, [data]);
 
@@ -54,9 +76,10 @@ export default function RepairOrderDetailPage({
       (jobDescription || '') !== (data.job_description || '') ||
       (note || '') !== (data.note || '') ||
       (estimatedTotal.trim() ? Number(estimatedTotal) : undefined) !== data.estimated_total ||
-      (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== data.final_charge_total
+      (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== data.final_charge_total ||
+      datetimeLocalToIso(estimatedCompletion) !== (data.estimated_completion || '')
     );
-  }, [data, estimatedTotal, finalChargeTotal, jobDescription, note, serviceType, status]);
+  }, [data, estimatedCompletion, estimatedTotal, finalChargeTotal, jobDescription, note, serviceType, status]);
 
   return (
     <div className="space-y-6">
@@ -146,6 +169,19 @@ export default function RepairOrderDetailPage({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-xs font-medium text-gray-600">Estimated Completion</div>
+              <input
+                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                type="datetime-local"
+                value={estimatedCompletion}
+                onChange={(e) => setEstimatedCompletion(e.target.value)}
+              />
+            </div>
+            <div />
+          </div>
+
           <div className="rounded-md border bg-gray-50 p-4 space-y-3">
             <div className="text-sm font-medium text-gray-900">Check-in / Add VIN</div>
             <div className="text-xs text-gray-600">
@@ -207,6 +243,7 @@ export default function RepairOrderDetailPage({
                     final_charge_total: finalChargeTotal.trim()
                       ? (Number.isFinite(Number(finalChargeTotal)) ? Number(finalChargeTotal) : undefined)
                       : undefined,
+                    estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
                   })
                 }
               >

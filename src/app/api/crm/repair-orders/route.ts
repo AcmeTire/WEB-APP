@@ -18,6 +18,7 @@ export const GET = async (req: NextRequest) => {
     'Job_Description',
     'Estimated_Total',
     'Final_Charge_Total',
+    'Estimated_Completion',
     'Vehicle',
     'Customer',
     'Created_Time',
@@ -59,6 +60,7 @@ export const POST = async (req: NextRequest) => {
   const customerId = body?.customer_id;
   const estimatedTotal = body?.estimated_total;
   const finalChargeTotal = body?.final_charge_total;
+  const estimatedCompletion = typeof body?.estimated_completion === 'string' ? body.estimated_completion.trim() : '';
 
   if (!vehicleId) {
     return NextResponse.json({ error: 'vehicle_id is required' }, { status: 400 });
@@ -73,6 +75,7 @@ export const POST = async (req: NextRequest) => {
         Job_Description: jobDescription || notes || '',
         ...(typeof estimatedTotal === 'number' ? { Estimated_Total: estimatedTotal } : {}),
         ...(typeof finalChargeTotal === 'number' ? { Final_Charge_Total: finalChargeTotal } : {}),
+        ...(estimatedCompletion ? { Estimated_Completion: estimatedCompletion } : {}),
         Vehicle: vehicleId,
         ...(customerId ? { Customer: customerId } : {}),
       },
@@ -99,6 +102,7 @@ export const POST = async (req: NextRequest) => {
       'Job_Description',
       'Estimated_Total',
       'Final_Charge_Total',
+      'Estimated_Completion',
       'Vehicle',
       'Customer',
       'Created_Time',

@@ -13,6 +13,7 @@ const FIELDS = [
   'Job_Description',
   'Estimated_Total',
   'Final_Charge_Total',
+  'Estimated_Completion',
   'Vehicle',
   'Customer',
   'Created_Time',
@@ -50,16 +51,34 @@ export const PATCH = async (req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(body?.notes !== undefined ? { Note: body.notes, Job_Description: body.notes } : {}),
         ...(typeof body?.estimated_total === 'number' ? { Estimated_Total: body.estimated_total } : {}),
         ...(typeof body?.final_charge_total === 'number' ? { Final_Charge_Total: body.final_charge_total } : {}),
+        ...(typeof body?.estimated_completion === 'string' && body.estimated_completion.trim()
+          ? { Estimated_Completion: body.estimated_completion.trim() }
+          : {}),
       },
     ],
   };
 
   try {
-    await makeZohoServerRequest<any>({
+    const updated = await makeZohoServerRequest<any>({
       method: 'PUT',
       endpoint: `/${REPAIR_ORDERS_MODULE}`,
       data: payload,
     });
+
+    const result = updated?.data?.[0];
+    if (result?.status && result.status !== 'success') {
+      return NextResponse.json(
+        {
+          error: 'Failed to update repair order',
+          zoho: {
+            code: result?.code,
+            message: result?.message,
+            details: result?.details,
+          },
+        },
+        { status: 400 }
+      );
+    }
 
     const got = await makeZohoServerRequest<any>({
       method: 'GET',

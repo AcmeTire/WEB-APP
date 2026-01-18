@@ -60,6 +60,7 @@ export const POST = async (req: NextRequest) => {
       'Job_Description',
       'Estimated_Total',
       'Final_Charge_Total',
+      'Estimated_Completion',
       'Vehicle',
       'Customer',
       'Created_Time',
@@ -74,9 +75,15 @@ export const POST = async (req: NextRequest) => {
 
     let endpoint: string;
 
-    if (status) {
+    if (resolvedCustomerId || status) {
+      const criteriaParts: string[] = [];
+      if (status) criteriaParts.push(`(Status:equals:${status})`);
+      if (resolvedCustomerId) criteriaParts.push(`(Customer:equals:${resolvedCustomerId})`);
+
+      const criteria = criteriaParts.length === 1 ? criteriaParts[0] : `(${criteriaParts.join('and')})`;
+
       endpoint = `/${REPAIR_ORDERS_MODULE}/search?${new URLSearchParams({
-        criteria: `(Status:equals:${status})`,
+        criteria,
         ...Object.fromEntries(baseParams.entries()),
       }).toString()}`;
     } else {
@@ -174,6 +181,7 @@ export const POST = async (req: NextRequest) => {
           vehicleDisplay,
           customerName,
           customerPhone: customer?.phone || '',
+          estimatedCompletion: o.estimated_completion || '',
         };
       })
       .filter(Boolean);

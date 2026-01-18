@@ -17,6 +17,7 @@ type UpdateRepairOrderInput = {
   notes?: string;
   estimated_total?: number;
   final_charge_total?: number;
+  estimated_completion?: string;
 };
 
 export const useUpdateRepairOrder = () => {

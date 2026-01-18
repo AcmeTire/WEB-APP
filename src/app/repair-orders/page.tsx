@@ -7,6 +7,26 @@ import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
 import { useCheckInVin } from '@/hooks/use-check-in-vin';
 import GlobalSearch from '@/components/global-search';
 
+const isoToDatetimeLocal = (iso: string) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+};
+
+const datetimeLocalToIso = (value: string) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+};
+
 const statusBadgeClasses = (status: RepairOrderStatus) => {
   switch (status) {
     case 'New':
@@ -70,6 +90,9 @@ const RepairOrderRow = ({
   const [finalChargeTotal, setFinalChargeTotal] = useState(
     item.repairOrder.final_charge_total !== undefined ? String(item.repairOrder.final_charge_total) : ''
   );
+  const [estimatedCompletion, setEstimatedCompletion] = useState(
+    isoToDatetimeLocal(item.repairOrder.estimated_completion || '')
+  );
   const [vin, setVin] = useState(item.vehicle?.vin || '');
 
   const customerName = item.customer
@@ -85,7 +108,8 @@ const RepairOrderRow = ({
     (jobDescription || '') !== (item.repairOrder.job_description || '') ||
     (note || '') !== (item.repairOrder.note || '') ||
     (estimatedTotal.trim() ? Number(estimatedTotal) : undefined) !== item.repairOrder.estimated_total ||
-    (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== item.repairOrder.final_charge_total;
+    (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== item.repairOrder.final_charge_total ||
+    datetimeLocalToIso(estimatedCompletion) !== (item.repairOrder.estimated_completion || '');
 
   return (
     <div className="px-4 py-3">
@@ -250,6 +274,21 @@ const RepairOrderRow = ({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-xs font-medium text-slate-300">Estimated Completion</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                  type="datetime-local"
+                  value={estimatedCompletion}
+                  onChange={(e) => setEstimatedCompletion(e.target.value)}
+                />
+              </div>
+            </div>
+            <div />
+          </div>
+
           <div className="space-y-2 rounded-lg border border-white/10 bg-white/3 p-3 backdrop-blur">
             <div className="text-xs font-medium text-slate-300">Check-in / Add VIN</div>
             <div className="flex flex-wrap items-end gap-3">
@@ -315,6 +354,7 @@ const RepairOrderRow = ({
                       ? Number(finalChargeTotal)
                       : undefined
                     : undefined,
+                  estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
                 })
               }
             >

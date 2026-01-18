@@ -9,6 +9,13 @@ import { useCreateRepairOrder } from '@/hooks/use-create-repair-order';
 import { useVehiclesByCustomer } from '@/hooks/use-vehicles-by-customer';
 import type { Vehicle } from '@/types';
 
+ const datetimeLocalToIso = (value: string) => {
+   if (!value) return '';
+   const d = new Date(value);
+   if (Number.isNaN(d.getTime())) return '';
+   return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+ };
+
 export default function NewRepairOrderPage() {
   const router = useRouter();
 
@@ -31,6 +38,7 @@ export default function NewRepairOrderPage() {
   const [note, setNote] = useState('');
   const [estimatedTotal, setEstimatedTotal] = useState('');
   const [finalChargeTotal, setFinalChargeTotal] = useState('');
+  const [estimatedCompletion, setEstimatedCompletion] = useState('');
 
   const [year, setYear] = useState('');
   const [make, setMake] = useState('');
@@ -96,6 +104,7 @@ export default function NewRepairOrderPage() {
       final_charge_total: finalChargeTotal.trim()
         ? (Number.isFinite(finalChargeTotalNum) ? finalChargeTotalNum : undefined)
         : undefined,
+      estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
     });
 
     router.push('/repair-orders');
@@ -239,7 +248,7 @@ export default function NewRepairOrderPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
               <div className="text-xs font-medium text-slate-300">Estimated Total</div>
               <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
@@ -270,10 +279,20 @@ export default function NewRepairOrderPage() {
                 />
               </div>
             </div>
+            <div>
+              <div className="text-xs font-medium text-slate-300">Estimated Completion</div>
+              <div className="mt-1 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                <input
+                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none disabled:opacity-40"
+                  type="datetime-local"
+                  value={estimatedCompletion}
+                  onChange={(e) => setEstimatedCompletion(e.target.value)}
+                  disabled={!selectedCustomer}
+                />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-3">
           <div className="text-sm font-medium text-slate-100">3) Vehicle</div>
 
           <div className="flex flex-wrap items-center gap-3">

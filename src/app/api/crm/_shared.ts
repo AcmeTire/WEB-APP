@@ -27,6 +27,7 @@ type ZohoDeal = {
   Note?: string;
   Estimated_Total?: number;
   Final_Charge_Total?: number;
+  Estimated_Completion?: string;
   Vehicle?: { id: string } | null;
   Customer?: { id: string } | null;
   Created_Time?: string;
@@ -80,6 +81,7 @@ export const normalizeRepairOrder = (z: ZohoDeal): RepairOrder => ({
   notes: z.Note || z.Job_Description || undefined,
   estimated_total: typeof z.Estimated_Total === 'number' ? z.Estimated_Total : undefined,
   final_charge_total: typeof z.Final_Charge_Total === 'number' ? z.Final_Charge_Total : undefined,
+  estimated_completion: z.Estimated_Completion || undefined,
   created_time: z.Created_Time || '',
   updated_time: z.Modified_Time || '',
 });
