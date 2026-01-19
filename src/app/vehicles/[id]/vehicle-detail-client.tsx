@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import GlobalSearch from '@/components/global-search';
 import { useCustomer } from '@/hooks/use-customer';
+import { useRepairOrdersByVehicle } from '@/hooks/use-repair-orders-by-vehicle';
 import { useVehicle } from '@/hooks/use-vehicle';
 import { useUpdateVehicle } from '@/hooks/use-update-vehicle';
 
@@ -27,6 +28,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
 
   const ownerIdForDisplay = vehicleOwnerId || customerId;
   const ownerQ = useCustomer(ownerIdForDisplay);
+  const repairOrdersQ = useRepairOrdersByVehicle(id);
 
   useEffect(() => {
     if (!data) return;
@@ -177,6 +179,37 @@ export default function VehicleDetailClient({ id }: { id: string }) {
                 )}
               </div>
             ) : null}
+
+            <div className="mt-4">
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Vehicle repair(s)
+              </div>
+              {repairOrdersQ.isLoading ? (
+                <div className="mt-2 text-xs text-slate-400">Loading…</div>
+              ) : repairOrdersQ.isError ? (
+                <div className="mt-2 text-xs text-slate-400">Failed to load repair orders.</div>
+              ) : (repairOrdersQ.data?.data || []).length === 0 ? (
+                <div className="mt-2 text-xs text-slate-400">No repair orders found.</div>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {(repairOrdersQ.data?.data || []).map((ro) => (
+                    <Link
+                      key={ro.id}
+                      href={`/repair-orders/${encodeURIComponent(ro.id)}`}
+                      className="block rounded-xl border border-[#d7b73f]/30 bg-[#d7b73f]/10 p-3 hover:border-[#d7b73f]/50 hover:bg-[#d7b73f]/15"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm font-semibold text-[#d7b73f]">{ro.service_type || ro.id}</div>
+                        <div className="text-xs text-slate-300">{ro.status}</div>
+                      </div>
+                      {ro.estimated_completion ? (
+                        <div className="mt-1 text-xs text-slate-300">Estimated completion: {ro.estimated_completion}</div>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {update.isError ? (
               <div className="mt-3 text-xs text-red-200">Save failed.</div>

@@ -47,6 +47,8 @@ export default function RepairOrderDetailPage({
   const update = useUpdateRepairOrder();
   const checkInVin = useCheckInVin();
 
+  const [isEditing, setIsEditing] = useState(false);
+
   const [status, setStatus] = useState<RepairOrderStatus>('New');
   const [serviceType, setServiceType] = useState<string>('');
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -68,6 +70,41 @@ export default function RepairOrderDetailPage({
     }
   }, [data]);
 
+  const onCancel = () => {
+    if (data) {
+      setStatus(data.status);
+      setServiceType(data.service_type || '');
+      setJobDescription(data.job_description || '');
+      setNote(data.note || '');
+      setEstimatedTotal(data.estimated_total !== undefined ? String(data.estimated_total) : '');
+      setFinalChargeTotal(data.final_charge_total !== undefined ? String(data.final_charge_total) : '');
+      setEstimatedCompletion(isoToDatetimeLocal(data.estimated_completion || ''));
+    }
+    setIsEditing(false);
+  };
+
+  const onSave = async () => {
+    await update.mutateAsync({
+      id,
+      status,
+      service_type: serviceType,
+      job_description: jobDescription,
+      note,
+      estimated_total: estimatedTotal.trim()
+        ? Number.isFinite(Number(estimatedTotal))
+          ? Number(estimatedTotal)
+          : undefined
+        : undefined,
+      final_charge_total: finalChargeTotal.trim()
+        ? Number.isFinite(Number(finalChargeTotal))
+          ? Number(finalChargeTotal)
+          : undefined
+        : undefined,
+      estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
+    });
+    setIsEditing(false);
+  };
+
   const canSave = useMemo(() => {
     if (!data) return false;
     return (
@@ -83,28 +120,56 @@ export default function RepairOrderDetailPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Repair Order</h1>
-        <div className="mt-1 text-sm text-gray-600">ID: {id}</div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold" style={{ color: '#d7b73f' }}>
+            Repair Order
+          </h1>
+          <div className="mt-1 text-sm text-slate-300">ID: {id}</div>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex gap-2">
+            <button
+              className="rounded-full bg-[#d7b73f] px-4 py-2 text-sm font-semibold text-black hover:bg-[#d7b73f]/90"
+              onClick={() => (isEditing ? onCancel() : setIsEditing(true))}
+              type="button"
+              disabled={!data}
+            >
+              {isEditing ? 'Cancel' : 'Edit'}
+            </button>
+            {isEditing ? (
+              <button
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
+                onClick={onSave}
+                type="button"
+                disabled={!canSave || update.isPending}
+              >
+                {update.isPending ? 'Saving…' : 'Save'}
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
-        <div className="rounded-lg border bg-white p-4 text-sm text-gray-600">Loading…</div>
+        <div className="text-sm text-slate-300">Loading…</div>
       ) : isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {(error as any)?.message || 'Failed to load repair order'}
-        </div>
+        <div className="text-sm text-red-200">{(error as any)?.message || 'Failed to load repair order.'}</div>
       ) : !data ? (
-        <div className="rounded-lg border bg-white p-4 text-sm text-gray-600">Not found.</div>
+        <div className="text-sm text-slate-300">Repair order not found.</div>
       ) : (
-        <div className="rounded-lg border bg-white p-6 space-y-6">
+        <div className="surface p-6 space-y-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <div className="text-xs font-medium text-gray-600">Status</div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Status
+              </div>
               <select
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as RepairOrderStatus)}
+                disabled={!isEditing}
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
@@ -114,92 +179,118 @@ export default function RepairOrderDetailPage({
               </select>
             </div>
             <div>
-              <div className="text-xs font-medium text-gray-600">Service type</div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Service type
+              </div>
               <input
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
+                readOnly={!isEditing}
               />
-              <div className="mt-1 text-xs text-gray-500">Vehicle ID: {data.vehicle_id}</div>
+              <div className="mt-1 text-xs text-slate-400">Vehicle ID: {data.vehicle_id}</div>
             </div>
           </div>
 
           <div>
-            <div className="text-xs font-medium text-gray-600">Job description</div>
+            <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+              Job description
+            </div>
             <textarea
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              className={
+                'mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none ' +
+                (isEditing ? 'focus:border-[#d7b73f]/50' : 'opacity-90')
+              }
               rows={6}
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
+              readOnly={!isEditing}
             />
           </div>
 
           <div>
-            <div className="text-xs font-medium text-gray-600">Note</div>
+            <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+              Note
+            </div>
             <textarea
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              className={
+                'mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none ' +
+                (isEditing ? 'focus:border-[#d7b73f]/50' : 'opacity-90')
+              }
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              readOnly={!isEditing}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <div className="text-xs font-medium text-gray-600">Estimated Total</div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Estimated Total
+              </div>
               <input
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
                 type="number"
                 step="0.01"
                 min="0"
                 value={estimatedTotal}
                 onChange={(e) => setEstimatedTotal(e.target.value)}
+                readOnly={!isEditing}
               />
             </div>
             <div>
-              <div className="text-xs font-medium text-gray-600">Final Charge Total</div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Final Charge Total
+              </div>
               <input
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
                 type="number"
                 step="0.01"
                 min="0"
                 value={finalChargeTotal}
                 onChange={(e) => setFinalChargeTotal(e.target.value)}
+                readOnly={!isEditing}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <div className="text-xs font-medium text-gray-600">Estimated Completion</div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                Estimated Completion
+              </div>
               <input
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
                 type="datetime-local"
                 value={estimatedCompletion}
                 onChange={(e) => setEstimatedCompletion(e.target.value)}
+                readOnly={!isEditing}
               />
             </div>
             <div />
           </div>
 
-          <div className="rounded-md border bg-gray-50 p-4 space-y-3">
-            <div className="text-sm font-medium text-gray-900">Check-in / Add VIN</div>
-            <div className="text-xs text-gray-600">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="text-sm font-medium text-slate-100">Check-in / Add VIN</div>
+            <div className="text-xs text-slate-300">
               Enter VIN when the vehicle is physically present. If that VIN already exists in CRM, this will re-link the
               repair order to the existing vehicle. Otherwise it saves the VIN onto the current vehicle.
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <div className="text-xs font-medium text-gray-600">VIN</div>
+                <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                  VIN
+                </div>
                 <input
-                  className="mt-1 w-80 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  className="mt-1 w-80 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none"
                   value={vin}
                   onChange={(e) => setVin(e.target.value)}
                   placeholder="Enter VIN"
                 />
               </div>
               <button
-                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                className="rounded-full bg-[#d7b73f] px-5 py-2 text-sm font-semibold text-black hover:bg-[#d7b73f]/90 disabled:opacity-40"
                 disabled={!vin.trim() || checkInVin.isPending}
                 onClick={() => checkInVin.mutate({ repair_order_id: id, vin })}
               >
@@ -207,10 +298,10 @@ export default function RepairOrderDetailPage({
               </button>
             </div>
             {checkInVin.isError ? (
-              <div className="text-sm text-red-700">Failed to save VIN</div>
+              <div className="text-sm text-red-200">Failed to save VIN</div>
             ) : null}
             {checkInVin.isSuccess ? (
-              <div className="text-sm text-emerald-700">
+              <div className="text-sm text-emerald-200">
                 {checkInVin.data.action === 'linked_existing_vehicle'
                   ? 'VIN matched an existing vehicle. Repair order linked.'
                   : 'VIN saved to vehicle.'}
@@ -219,36 +310,12 @@ export default function RepairOrderDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <a className="text-sm font-medium text-gray-700 hover:underline" href="/repair-orders">
+            <a className="text-sm font-medium text-slate-300 hover:text-white" href="/repair-orders">
               Back to list
             </a>
             <div className="flex items-center gap-3">
-              {update.isError ? (
-                <div className="text-sm text-red-700">Failed to save</div>
-              ) : null}
-              {update.isSuccess ? (
-                <div className="text-sm text-emerald-700">Saved</div>
-              ) : null}
-              <button
-                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
-                disabled={!canSave || update.isPending}
-                onClick={() =>
-                  update.mutate({
-                    id,
-                    status,
-                    service_type: serviceType,
-                    job_description: jobDescription,
-                    note,
-                    estimated_total: estimatedTotal.trim() ? (Number.isFinite(Number(estimatedTotal)) ? Number(estimatedTotal) : undefined) : undefined,
-                    final_charge_total: finalChargeTotal.trim()
-                      ? (Number.isFinite(Number(finalChargeTotal)) ? Number(finalChargeTotal) : undefined)
-                      : undefined,
-                    estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
-                  })
-                }
-              >
-                {update.isPending ? 'Saving…' : 'Save'}
-              </button>
+              {update.isError ? <div className="text-sm text-red-200">Failed to save</div> : null}
+              {update.isSuccess ? <div className="text-sm text-slate-300">Saved</div> : null}
             </div>
           </div>
         </div>
