@@ -1,10 +1,12 @@
  'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { ActiveRepairOrderItem, RepairOrderStatus } from '@/types';
 import { useRepairOrdersEnriched } from '@/hooks/use-repair-orders-enriched';
 import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
 import { useCheckInVin } from '@/hooks/use-check-in-vin';
+import { useUpdateVehicle } from '@/hooks/use-update-vehicle';
 import GlobalSearch from '@/components/global-search';
 
 const isoToDatetimeLocal = (iso: string) => {
@@ -78,6 +80,7 @@ const RepairOrderRow = ({
 }) => {
   const update = useUpdateRepairOrder();
   const checkInVin = useCheckInVin();
+  const updateVehicle = useUpdateVehicle();
 
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<RepairOrderStatus>(item.repairOrder.status);
@@ -94,6 +97,7 @@ const RepairOrderRow = ({
     isoToDatetimeLocal(item.repairOrder.estimated_completion || '')
   );
   const [vin, setVin] = useState(item.vehicle?.vin || '');
+  const [licensePlate, setLicensePlate] = useState(item.vehicle?.license_plate || '');
 
   const customerName = item.customer
     ? `${item.customer.first_name} ${item.customer.last_name}`.trim()
@@ -101,6 +105,7 @@ const RepairOrderRow = ({
 
   const vehicleDisplay = formatVehicleDisplay(item.vehicle);
   const vehicleVin = item.vehicle?.vin ? `VIN: ${item.vehicle.vin}` : 'VIN: —';
+  const vehiclePlate = item.vehicle?.license_plate ? `Plate: ${item.vehicle.license_plate}` : 'Plate: —';
 
   const canSave =
     status !== item.repairOrder.status ||
@@ -154,12 +159,34 @@ const RepairOrderRow = ({
           ) : null}
         </div>
         <div className="col-span-4">
-          <div className="font-medium text-slate-100">{vehicleDisplay || 'Unknown vehicle'}</div>
-          <div className="text-xs text-slate-400">{vehicleVin}</div>
+          {item.vehicle?.id ? (
+            <Link href={`/vehicles/${encodeURIComponent(item.vehicle.id)}`} className="block hover:opacity-95">
+              <div className="font-medium text-slate-100">{vehicleDisplay || 'Unknown vehicle'}</div>
+              <div className="text-xs text-slate-400">
+                {vehicleVin} {' · '} {vehiclePlate}
+              </div>
+            </Link>
+          ) : (
+            <>
+              <div className="font-medium text-slate-100">{vehicleDisplay || 'Unknown vehicle'}</div>
+              <div className="text-xs text-slate-400">
+                {vehicleVin} {' · '} {vehiclePlate}
+              </div>
+            </>
+          )}
         </div>
         <div className="col-span-3">
-          <div className="font-medium text-slate-100">{customerName || 'Unknown customer'}</div>
-          <div className="text-xs text-slate-400">{item.customer?.phone || ''}</div>
+          {item.customer?.id ? (
+            <Link href={`/customers/${encodeURIComponent(item.customer.id)}`} className="block hover:opacity-95">
+              <div className="font-medium text-slate-100">{customerName || 'Unknown customer'}</div>
+              <div className="text-xs text-slate-400">{item.customer?.phone || ''}</div>
+            </Link>
+          ) : (
+            <>
+              <div className="font-medium text-slate-100">{customerName || 'Unknown customer'}</div>
+              <div className="text-xs text-slate-400">{item.customer?.phone || ''}</div>
+            </>
+          )}
         </div>
         <div className="col-span-2">
           <div className="text-slate-100">{item.repairOrder.service_type || ''}</div>
@@ -290,37 +317,71 @@ const RepairOrderRow = ({
           </div>
 
           <div className="space-y-2 rounded-lg border border-white/10 bg-white/3 p-3 backdrop-blur">
-            <div className="text-xs font-medium text-slate-300">Check-in / Add VIN</div>
-            <div className="flex flex-wrap items-end gap-3">
-              <div>
-                <div className="text-xs font-medium text-slate-300">VIN</div>
-                <div className="mt-1 w-80 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
-                  <input
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
-                    value={vin}
-                    onChange={(e) => setVin(e.target.value)}
-                    placeholder="Enter VIN"
-                  />
+            <div className="text-xs font-medium text-slate-300">VIN / License plate</div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium text-slate-300">VIN</div>
+                  <div className="mt-1 w-full rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                    <input
+                      className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                      value={vin}
+                      onChange={(e) => setVin(e.target.value)}
+                      placeholder="Enter VIN"
+                    />
+                  </div>
                 </div>
+                <button
+                  className="rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-black hover:bg-[#C9A534] disabled:opacity-40"
+                  disabled={!vin.trim() || checkInVin.isPending}
+                  onClick={() => {
+                    const nextVin = vin.trim();
+                    checkInVin.mutate(
+                      { repair_order_id: item.repairOrder.id, vin: nextVin },
+                      {
+                        onSuccess: (data) => {
+                          setVin(data.vehicle.vin || nextVin);
+                          setLicensePlate(data.vehicle.license_plate || licensePlate);
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {checkInVin.isPending ? 'Saving…' : 'Save VIN'}
+                </button>
               </div>
-              <button
-                className="rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-black hover:bg-[#C9A534] disabled:opacity-40"
-                disabled={!vin.trim() || checkInVin.isPending}
-                onClick={() => {
-                  const nextVin = vin.trim();
-                  checkInVin.mutate(
-                    { repair_order_id: item.repairOrder.id, vin: nextVin },
-                    {
-                      onSuccess: (data) => {
-                        setVin(data.vehicle.vin || nextVin);
-                      },
-                    }
-                  );
-                }}
-              >
-                {checkInVin.isPending ? 'Saving…' : 'Save VIN'}
-              </button>
+
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium text-slate-300">License plate</div>
+                  <div className="mt-1 w-full rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-2 backdrop-blur">
+                    <input
+                      className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                      value={licensePlate}
+                      onChange={(e) => setLicensePlate(e.target.value)}
+                      placeholder="Enter plate"
+                    />
+                  </div>
+                </div>
+                <button
+                  className="rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-black hover:bg-[#C9A534] disabled:opacity-40"
+                  disabled={!item.vehicle?.id || updateVehicle.isPending}
+                  onClick={() =>
+                    updateVehicle.mutate(
+                      { id: item.vehicle!.id, license_plate: licensePlate.trim() || undefined },
+                      {
+                        onSuccess: (data) => {
+                          setLicensePlate(data.data.license_plate || '');
+                        },
+                      }
+                    )
+                  }
+                >
+                  {updateVehicle.isPending ? 'Saving…' : 'Save plate'}
+                </button>
+              </div>
             </div>
+
             {checkInVin.isError ? <div className="text-sm text-red-400">Failed to save VIN</div> : null}
             {checkInVin.isSuccess ? (
               <div className="text-sm text-emerald-400">
@@ -329,6 +390,8 @@ const RepairOrderRow = ({
                   : 'VIN saved to vehicle.'}
               </div>
             ) : null}
+            {updateVehicle.isError ? <div className="text-sm text-red-400">Failed to save plate</div> : null}
+            {updateVehicle.isSuccess ? <div className="text-sm text-emerald-400">Plate saved</div> : null}
           </div>
 
           <div className="flex items-center justify-end gap-3">

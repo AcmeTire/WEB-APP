@@ -3,6 +3,8 @@
  import { use, useEffect, useMemo, useState } from 'react';
  import type { RepairOrderStatus } from '@/types';
  import { useRepairOrder } from '@/hooks/use-repair-order';
+ import { useVehicle } from '@/hooks/use-vehicle';
+ import { useUpdateVehicle } from '@/hooks/use-update-vehicle';
  import { useUpdateRepairOrder } from '@/hooks/use-update-repair-order';
  import { useCheckInVin } from '@/hooks/use-check-in-vin';
 
@@ -46,6 +48,8 @@ export default function RepairOrderDetailPage({
   const { data, isLoading, isError, error } = useRepairOrder(id);
   const update = useUpdateRepairOrder();
   const checkInVin = useCheckInVin();
+  const vehicleQ = useVehicle(data?.vehicle_id || '');
+  const updateVehicle = useUpdateVehicle();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -57,6 +61,7 @@ export default function RepairOrderDetailPage({
   const [finalChargeTotal, setFinalChargeTotal] = useState<string>('');
   const [estimatedCompletion, setEstimatedCompletion] = useState<string>('');
   const [vin, setVin] = useState<string>('');
+  const [licensePlate, setLicensePlate] = useState<string>('');
 
   useEffect(() => {
     if (data) {
@@ -70,6 +75,15 @@ export default function RepairOrderDetailPage({
     }
   }, [data]);
 
+  const vehicleVin = vehicleQ.data?.data?.vin || '';
+  const vehicleLicensePlate = vehicleQ.data?.data?.license_plate || '';
+
+  useEffect(() => {
+    if (isEditing) return;
+    setVin(vehicleVin);
+    setLicensePlate(vehicleLicensePlate);
+  }, [isEditing, vehicleLicensePlate, vehicleVin]);
+
   const onCancel = () => {
     if (data) {
       setStatus(data.status);
@@ -80,10 +94,34 @@ export default function RepairOrderDetailPage({
       setFinalChargeTotal(data.final_charge_total !== undefined ? String(data.final_charge_total) : '');
       setEstimatedCompletion(isoToDatetimeLocal(data.estimated_completion || ''));
     }
+    setVin(vehicleVin);
+    setLicensePlate(vehicleLicensePlate);
     setIsEditing(false);
   };
 
   const onSave = async () => {
+    const nextVin = vin.trim();
+    const didChangeVin = nextVin !== (vehicleVin || '');
+
+    const nextPlate = licensePlate.trim();
+    const didChangePlate = nextPlate !== (vehicleLicensePlate || '');
+
+    if (didChangeVin) {
+      if (!nextVin) {
+        throw new Error('VIN is required');
+      }
+      await checkInVin.mutateAsync({ repair_order_id: id, vin: nextVin });
+    }
+
+    if (didChangePlate) {
+      if (data?.vehicle_id) {
+        await updateVehicle.mutateAsync({
+          id: data.vehicle_id,
+          license_plate: nextPlate || undefined,
+        });
+      }
+    }
+
     await update.mutateAsync({
       id,
       status,
@@ -107,6 +145,11 @@ export default function RepairOrderDetailPage({
 
   const canSave = useMemo(() => {
     if (!data) return false;
+    const nextVin = vin.trim();
+    const didChangeVin = nextVin !== (vehicleVin || '');
+
+    const nextPlate = licensePlate.trim();
+    const didChangePlate = nextPlate !== (vehicleLicensePlate || '');
     return (
       status !== data.status ||
       (serviceType || '') !== (data.service_type || '') ||
@@ -114,9 +157,24 @@ export default function RepairOrderDetailPage({
       (note || '') !== (data.note || '') ||
       (estimatedTotal.trim() ? Number(estimatedTotal) : undefined) !== data.estimated_total ||
       (finalChargeTotal.trim() ? Number(finalChargeTotal) : undefined) !== data.final_charge_total ||
-      datetimeLocalToIso(estimatedCompletion) !== (data.estimated_completion || '')
+      datetimeLocalToIso(estimatedCompletion) !== (data.estimated_completion || '') ||
+      (didChangeVin && Boolean(nextVin)) ||
+      didChangePlate
     );
-  }, [data, estimatedCompletion, estimatedTotal, finalChargeTotal, jobDescription, note, serviceType, status]);
+  }, [
+    data,
+    estimatedCompletion,
+    estimatedTotal,
+    finalChargeTotal,
+    jobDescription,
+    licensePlate,
+    note,
+    serviceType,
+    status,
+    vehicleLicensePlate,
+    vehicleVin,
+    vin,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -271,42 +329,32 @@ export default function RepairOrderDetailPage({
             <div />
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <div className="text-sm font-medium text-slate-100">Check-in / Add VIN</div>
-            <div className="text-xs text-slate-300">
-              Enter VIN when the vehicle is physically present. If that VIN already exists in CRM, this will re-link the
-              repair order to the existing vehicle. Otherwise it saves the VIN onto the current vehicle.
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
-              <div>
-                <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
-                  VIN
-                </div>
-                <input
-                  className="mt-1 w-80 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none"
-                  value={vin}
-                  onChange={(e) => setVin(e.target.value)}
-                  placeholder="Enter VIN"
-                />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                VIN
               </div>
-              <button
-                className="rounded-full bg-[#d7b73f] px-5 py-2 text-sm font-semibold text-black hover:bg-[#d7b73f]/90 disabled:opacity-40"
-                disabled={!vin.trim() || checkInVin.isPending}
-                onClick={() => checkInVin.mutate({ repair_order_id: id, vin })}
-              >
-                {checkInVin.isPending ? 'Saving…' : 'Save VIN'}
-              </button>
+              <input
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                value={vin}
+                onChange={(e) => setVin(e.target.value)}
+                readOnly={!isEditing}
+                placeholder={vehicleQ.isLoading ? 'Loading…' : '—'}
+              />
+              {checkInVin.isError ? <div className="mt-2 text-sm text-red-200">Failed to save VIN</div> : null}
             </div>
-            {checkInVin.isError ? (
-              <div className="text-sm text-red-200">Failed to save VIN</div>
-            ) : null}
-            {checkInVin.isSuccess ? (
-              <div className="text-sm text-emerald-200">
-                {checkInVin.data.action === 'linked_existing_vehicle'
-                  ? 'VIN matched an existing vehicle. Repair order linked.'
-                  : 'VIN saved to vehicle.'}
+            <div>
+              <div className="text-xs font-medium" style={{ color: '#d7b73f' }}>
+                License plate
               </div>
-            ) : null}
+              <input
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+                readOnly={!isEditing}
+                placeholder={vehicleQ.isLoading ? 'Loading…' : '—'}
+              />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
