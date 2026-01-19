@@ -1,19 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nextPath, setNextPath] = useState('/');
   const router = useRouter();
-  const sp = useSearchParams();
 
-  const nextPath = useMemo(() => {
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
     const raw = sp.get('next') || '/';
-    return raw.startsWith('/') ? raw : '/';
-  }, [sp]);
+    setNextPath(raw.startsWith('/') ? raw : '/');
+  }, []);
 
   const submit = async () => {
     setError('');
