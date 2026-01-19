@@ -4,7 +4,7 @@ import GlobalSearch from '@/components/global-search';
 
 export default function HomePage() {
   return (
-    <div className="space-y-8">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col gap-8">
       <div className="flex flex-col items-center text-center">
         <Image src={logo} alt="Acme Tire" className="h-14 w-auto" priority />
       </div>
@@ -46,6 +46,10 @@ export default function HomePage() {
           View and edit existing repair orders.
         </div>
       </a>
+
+      <div className="mt-auto pb-6 text-center text-4xl font-semibold text-slate-800">
+        "Lets Keep Having Fun"
+      </div>
     </div>
   );
 }
