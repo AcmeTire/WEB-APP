@@ -10,7 +10,11 @@ const base64UrlToUint8Array = (input: string) => {
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 };
 
-const toArrayBuffer = (u8: Uint8Array): ArrayBuffer => u8.slice().buffer;
+const toArrayBuffer = (u8: Uint8Array): ArrayBuffer => {
+  const copy = new Uint8Array(u8.byteLength);
+  copy.set(u8);
+  return copy.buffer;
+};
 
 const verifyAuthCookie = async (token: string) => {
   const secret = process.env.AUTH_SECRET;
@@ -40,7 +44,7 @@ const verifyAuthCookie = async (token: string) => {
   );
 
   const ok = await crypto.subtle.verify(
-    'HMAC',
+    { name: 'HMAC' },
     key,
     toArrayBuffer(sigBytes),
     toArrayBuffer(enc.encode(payloadB64))

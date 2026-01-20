@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import logo from '../../acme tire x dyligent.png';
@@ -15,6 +15,7 @@ type NavItem = {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const items: NavItem[] = useMemo(
     () => [
@@ -85,7 +86,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <main className="flex-1">
-          <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+          <div className="mx-auto max-w-6xl px-6 py-8">
+            <div className="mb-6 flex items-center justify-end">
+              <button
+                type="button"
+                className="rounded-full border border-[#d7b73f]/30 bg-[#d7b73f]/10 px-4 py-2 text-xs font-semibold"
+                style={{ color: '#d7b73f' }}
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                  } finally {
+                    const next = pathname || '/';
+                    router.replace(`/login?next=${encodeURIComponent(next)}`);
+                    router.refresh();
+                  }
+                }}
+                aria-label="Lock"
+                title="Lock"
+              >
+                Lock
+              </button>
+            </div>
+            {children}
+          </div>
         </main>
       </div>
     </div>
