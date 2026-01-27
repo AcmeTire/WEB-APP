@@ -37,20 +37,16 @@ export const GET = async (req: NextRequest) => {
     fields: roFields,
   });
 
-  const endpoint = status
-    ? `/${REPAIR_ORDERS_MODULE}/search?${new URLSearchParams({
-        criteria: `(Status:equals:${status})`,
-        ...Object.fromEntries(baseParams.entries()),
-      }).toString()}`
-    : `/${REPAIR_ORDERS_MODULE}?${baseParams.toString()}`;
-
   try {
     const resp = await makeZohoServerRequest<ZohoListResponse<any>>({
       method: 'GET',
-      endpoint,
+      endpoint: `/${REPAIR_ORDERS_MODULE}?${baseParams.toString()}`,
     });
 
-    const orders = (resp.data || []).map(normalizeRepairOrder);
+    const targetStatus = typeof status === 'string' ? status.trim() : '';
+    const orders = (resp.data || [])
+      .map(normalizeRepairOrder)
+      .filter((o) => (!targetStatus ? true : o.status === targetStatus));
     const vehicleIds = Array.from(new Set(orders.map((o) => o.vehicle_id).filter(Boolean)));
 
     const vehiclesById: Record<string, any> = {};

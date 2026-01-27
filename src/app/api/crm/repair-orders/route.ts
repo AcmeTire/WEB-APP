@@ -5,6 +5,12 @@ import { normalizeRepairOrder, ZohoListResponse } from '../_shared';
 
 const REPAIR_ORDERS_MODULE = 'Repair_Orders';
 
+ const toZohoCriteriaStringValue = (value: string) => {
+   const v = value.trim();
+   const escaped = v.replace(/"/g, '\\"');
+   return `"${escaped}"`;
+ };
+
 export const GET = async (req: NextRequest) => {
   const status = req.nextUrl.searchParams.get('status');
   const page = req.nextUrl.searchParams.get('page') || '1';
@@ -31,12 +37,17 @@ export const GET = async (req: NextRequest) => {
     fields,
   });
 
-  if (status) params.set('Status', status);
+  const endpoint = status
+    ? `/${REPAIR_ORDERS_MODULE}/search?${new URLSearchParams({
+        criteria: `(Status:equals:${toZohoCriteriaStringValue(status)})`,
+        ...Object.fromEntries(params.entries()),
+      }).toString()}`
+    : `/${REPAIR_ORDERS_MODULE}?${params.toString()}`;
 
   try {
     const resp = await makeZohoServerRequest<ZohoListResponse<any>>({
       method: 'GET',
-      endpoint: `/${REPAIR_ORDERS_MODULE}?${params.toString()}`,
+      endpoint,
     });
 
     return NextResponse.json({
