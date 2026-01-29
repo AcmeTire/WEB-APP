@@ -5,7 +5,7 @@ import { normalizeVehicle } from '../_shared';
 
 const VEHICLES_MODULE = 'Vehicles';
 
-const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Owner1'].join(',');
+const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Engine_Size', 'Owner1'].join(',');
 
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
@@ -18,6 +18,7 @@ export const POST = async (req: NextRequest) => {
         Model: body?.model || '',
         ...(body?.vin ? { Vin: body.vin } : {}),
         ...(body?.license_plate ? { License_Plate: body.license_plate } : {}),
+        ...(body?.engine_size ? { Engine_Size: body.engine_size } : {}),
         Owner1: body?.customer_id || undefined,
       },
     ],

@@ -4,7 +4,7 @@ import { normalizeVehicle } from '../../_shared';
 
 const VEHICLES_MODULE = 'Vehicles';
 
-const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Owner1'].join(',');
+const FIELDS = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Engine_Size', 'Owner1'].join(',');
 
 export const GET = async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
   const { id } = await ctx.params;
@@ -37,6 +37,7 @@ export const PATCH = async (req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(body?.model !== undefined ? { Model: body.model || '' } : {}),
         ...(body?.vin !== undefined ? { Vin: body.vin || '' } : {}),
         ...(body?.license_plate !== undefined ? { License_Plate: body.license_plate || '' } : {}),
+        ...(body?.engine_size !== undefined ? { Engine_Size: body.engine_size || '' } : {}),
         ...(body?.customer_id ? { Owner1: body.customer_id } : {}),
         ...(body?.rawUpdates && typeof body.rawUpdates === 'object' ? body.rawUpdates : {}),
       },

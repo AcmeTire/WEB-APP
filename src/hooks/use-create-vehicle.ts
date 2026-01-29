@@ -14,6 +14,7 @@ type Input = {
   model: string;
   vin?: string;
   license_plate?: string;
+  engine_size?: string;
   customer_id: string;
 };
 

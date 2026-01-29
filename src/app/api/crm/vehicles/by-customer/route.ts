@@ -10,7 +10,7 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: 'customer_id is required' }, { status: 400 });
   }
 
-  const fields = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Owner1'].join(',');
+  const fields = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Engine_Size', 'Owner1'].join(',');
 
   try {
     const resp = await makeZohoServerRequest<ZohoListResponse<any>>({

@@ -21,6 +21,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
   const [model, setModel] = useState('');
   const [vin, setVin] = useState('');
   const [plate, setPlate] = useState('');
+  const [engineSize, setEngineSize] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [color, setColor] = useState('');
   const [note, setNote] = useState('');
@@ -37,6 +38,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
     setModel(data.model || '');
     setVin(data.vin || '');
     setPlate(data.license_plate || '');
+    setEngineSize(data.engine_size || '');
     setCustomerId(data.customer_id || '');
     setColor(typeof raw?.Color === 'string' ? raw.Color : '');
     setNote(typeof raw?.Note === 'string' ? raw.Note : '');
@@ -57,6 +59,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
       setModel(data.model || '');
       setVin(data.vin || '');
       setPlate(data.license_plate || '');
+      setEngineSize(data.engine_size || '');
       setCustomerId(data.customer_id || '');
       setColor(typeof raw?.Color === 'string' ? raw.Color : '');
       setNote(typeof raw?.Note === 'string' ? raw.Note : '');
@@ -75,6 +78,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
       model,
       vin,
       license_plate: plate,
+      engine_size: engineSize,
       customer_id: customerId,
       rawUpdates: {
         Color: color || null,
@@ -132,6 +136,7 @@ export default function VehicleDetailClient({ id }: { id: string }) {
               <Field label="Year" value={year} onChange={setYear} readOnly={!isEditing} />
               <Field label="Make" value={make} onChange={setMake} readOnly={!isEditing} />
               <Field label="Model" value={model} onChange={setModel} readOnly={!isEditing} />
+              <Field label="Engine size" value={engineSize} onChange={setEngineSize} readOnly={!isEditing} />
               <Field label="VIN" value={vin} onChange={setVin} readOnly={!isEditing} />
               <Field label="License plate" value={plate} onChange={setPlate} readOnly={!isEditing} />
               <Field label="Color" value={color} onChange={setColor} readOnly={!isEditing} />

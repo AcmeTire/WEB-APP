@@ -43,6 +43,7 @@ export default function NewRepairOrderPage() {
   const [year, setYear] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const [engineSize, setEngineSize] = useState('');
   const [licensePlate, setLicensePlate] = useState('');
 
   const selectedCustomer = customerQuery.data || null;
@@ -89,6 +90,7 @@ export default function NewRepairOrderPage() {
             year: year.trim(),
             make: make.trim(),
             model: model.trim(),
+            engine_size: engineSize.trim() || undefined,
             license_plate: licensePlate.trim() || undefined,
             customer_id: selectedCustomer.id,
           })).id;
@@ -348,7 +350,7 @@ export default function NewRepairOrderPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <div>
                   <div className="text-xs font-medium text-slate-300">Year</div>
                   <input
@@ -374,6 +376,16 @@ export default function NewRepairOrderPage() {
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     disabled={!selectedCustomer}
+                  />
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-slate-300">Engine size (optional)</div>
+                  <input
+                    className="input-dark mt-1"
+                    value={engineSize}
+                    onChange={(e) => setEngineSize(e.target.value)}
+                    disabled={!selectedCustomer}
+                    placeholder="e.g. 3.5L"
                   />
                 </div>
                 <div>

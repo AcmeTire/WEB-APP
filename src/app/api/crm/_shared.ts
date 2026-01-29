@@ -16,6 +16,7 @@ type ZohoVehicle = {
   Model?: string;
   Vin?: string;
   License_Plate?: string;
+  Engine_Size?: string;
   Owner1?: { id: string } | null;
 };
 
@@ -67,6 +68,7 @@ export const normalizeVehicle = (z: ZohoVehicle): Vehicle => ({
   model: z.Model || '',
   vin: z.Vin || '',
   license_plate: z.License_Plate || undefined,
+  engine_size: z.Engine_Size || undefined,
   customer_id: z.Owner1?.id || '',
 });
 
