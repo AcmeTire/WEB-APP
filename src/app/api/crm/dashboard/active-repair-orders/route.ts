@@ -33,15 +33,7 @@ export const GET = async () => {
 
     const active = (resp.data || []).filter((d: any) => {
       const s = (d?.Status || '').toLowerCase();
-      return (
-        s === 'new' ||
-        s === 'in progress' ||
-        s === 'diagnosing' ||
-        s === 'scheduled' ||
-        s === 'dropped off' ||
-        s === 'waiting approval' ||
-        s.includes('waiting')
-      );
+      return s === 'in progress' || s === 'diagnosing';
     });
 
     const orders = active.map(normalizeRepairOrder);
@@ -51,7 +43,8 @@ export const GET = async () => {
     const customersById: Record<string, any> = {};
 
     if (vehicleIds.length) {
-      const vFields = ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Owner1'].join(',');
+      const vFields =
+        ['id', 'Name', 'Make', 'Model', 'Vin', 'License_Plate', 'Engine_Size', 'Owner1'].join(',');
       const vs = await Promise.all(
         vehicleIds.map((id) =>
           makeZohoServerRequest<any>({
