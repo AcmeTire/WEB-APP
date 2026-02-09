@@ -34,15 +34,19 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
     case 'New':
       return 'bg-blue-500/15 text-blue-200 ring-blue-400/25';
     case 'Scheduled':
+      return 'bg-indigo-500/15 text-indigo-200 ring-indigo-400/25';
     case 'Dropped Off':
-      return 'bg-purple-500/15 text-purple-200 ring-purple-400/25';
+      return 'bg-orange-500/30 text-orange-100 ring-orange-400/50';
     case 'Diagnosing':
+      return 'bg-cyan-500/15 text-cyan-200 ring-cyan-400/25';
     case 'Waiting Approval':
+      return 'bg-violet-500/15 text-violet-200 ring-violet-400/25';
     case 'In Progress':
-      return 'bg-amber-500/15 text-amber-200 ring-amber-400/25';
+      return 'bg-lime-500/15 text-lime-200 ring-lime-400/25';
     case 'Ready For Pickup':
+      return 'bg-green-500/15 text-green-200 ring-green-400/25';
     case 'Completed':
-      return 'bg-emerald-500/15 text-emerald-200 ring-emerald-400/25';
+      return 'bg-[#D4AF37]/15 text-[#F6E7B7] ring-[#D4AF37]/35';
     default:
       return 'bg-slate-500/15 text-slate-200 ring-slate-400/25';
   }
@@ -441,6 +445,40 @@ export default function RepairOrdersPage() {
 
   const rows = useMemo(() => (data?.data || []) as ActiveRepairOrderItem[], [data]);
 
+  const sortedRows = useMemo(() => {
+    const rank = (s: RepairOrderStatus) => {
+      switch (s) {
+        case 'New':
+          return 0;
+        case 'Scheduled':
+          return 1;
+        case 'Dropped Off':
+          return 2;
+        case 'Diagnosing':
+          return 3;
+        case 'Waiting Approval':
+          return 4;
+        case 'In Progress':
+          return 5;
+        case 'Ready For Pickup':
+          return 6;
+        case 'Completed':
+          return 7;
+        default:
+          return 99;
+      }
+    };
+
+    return [...rows].sort((a, b) => {
+      const r = rank(a.repairOrder.status) - rank(b.repairOrder.status);
+      if (r !== 0) return r;
+
+      const aT = a.repairOrder.updated_time || a.repairOrder.created_time || '';
+      const bT = b.repairOrder.updated_time || b.repairOrder.created_time || '';
+      return bT.localeCompare(aT);
+    });
+  }, [rows]);
+
   const formatVehicleDisplay = (vehicle: ActiveRepairOrderItem['vehicle']) => {
     if (!vehicle) return '';
     return [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
@@ -503,7 +541,7 @@ export default function RepairOrdersPage() {
             <div className="col-span-1 text-right">Edit</div>
           </div>
           <div className="divide-y divide-white/10">
-            {rows.map((item) => (
+            {sortedRows.map((item) => (
               <RepairOrderRow
                 key={item.repairOrder.id}
                 item={item}

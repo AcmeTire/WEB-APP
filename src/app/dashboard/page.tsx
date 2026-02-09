@@ -32,15 +32,19 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
     case 'New':
       return 'bg-blue-500/15 text-blue-200 ring-blue-400/25';
     case 'Scheduled':
+      return 'bg-indigo-500/15 text-indigo-200 ring-indigo-400/25';
     case 'Dropped Off':
-      return 'bg-purple-500/15 text-purple-200 ring-purple-400/25';
+      return 'bg-orange-500/30 text-orange-100 ring-orange-400/50';
     case 'Diagnosing':
+      return 'bg-cyan-500/15 text-cyan-200 ring-cyan-400/25';
     case 'Waiting Approval':
+      return 'bg-violet-500/15 text-violet-200 ring-violet-400/25';
     case 'In Progress':
-      return 'bg-amber-500/15 text-amber-200 ring-amber-400/25';
+      return 'bg-lime-500/15 text-lime-200 ring-lime-400/25';
     case 'Ready For Pickup':
+      return 'bg-green-500/15 text-green-200 ring-green-400/25';
     case 'Completed':
-      return 'bg-emerald-500/15 text-emerald-200 ring-emerald-400/25';
+      return 'bg-[#D4AF37]/15 text-[#F6E7B7] ring-[#D4AF37]/35';
     default:
       return 'bg-slate-500/15 text-slate-200 ring-slate-400/25';
   }
