@@ -33,7 +33,7 @@ export const GET = async () => {
 
     const active = (resp.data || []).filter((d: any) => {
       const s = (d?.Status || '').toLowerCase();
-      return s === 'in progress' || s === 'diagnosing';
+      return s === 'in progress' || s === 'diagnosing' || s === 'dropped off';
     });
 
     const orders = active.map(normalizeRepairOrder);
