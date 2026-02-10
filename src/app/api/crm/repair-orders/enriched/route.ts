@@ -11,10 +11,46 @@ const CONTACTS_MODULE = 'Contacts';
 const VEHICLES_MODULE = 'Vehicles';
 const REPAIR_ORDERS_MODULE = 'Repair_Orders';
 
+let lastCacheKey: string | null = null;
+let lastCacheAt = 0;
+let lastCachePayload: any = null;
+
+const CACHE_TTL_MS = 10_000;
+
+const mapWithConcurrency = async <T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> => {
+  const results: R[] = new Array(items.length);
+  let i = 0;
+
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }).map(
+    async () => {
+      while (i < items.length) {
+        const idx = i++;
+        results[idx] = await fn(items[idx]);
+      }
+    }
+  );
+
+  await Promise.all(workers);
+  return results;
+};
+
 export const GET = async (req: NextRequest) => {
   const status = req.nextUrl.searchParams.get('status');
   const page = req.nextUrl.searchParams.get('page') || '1';
   const perPage = req.nextUrl.searchParams.get('perPage') || '20';
+
+  const cacheKey = `${status || ''}|${page}|${perPage}`;
+  if (
+    lastCacheKey === cacheKey &&
+    lastCachePayload &&
+    Date.now() - lastCacheAt < CACHE_TTL_MS
+  ) {
+    return NextResponse.json(lastCachePayload);
+  }
 
   const roFields = [
     'id',
@@ -54,13 +90,11 @@ export const GET = async (req: NextRequest) => {
 
     if (vehicleIds.length) {
       const vFields = ['id', 'Name', 'Make', 'Model', 'Vin', 'Owner1'].join(',');
-      const vs = await Promise.all(
-        vehicleIds.map((id) =>
-          makeZohoServerRequest<any>({
-            method: 'GET',
-            endpoint: `/${VEHICLES_MODULE}/${id}?fields=${encodeURIComponent(vFields)}`,
-          })
-        )
+      const vs = await mapWithConcurrency(vehicleIds, 6, (id) =>
+        makeZohoServerRequest<any>({
+          method: 'GET',
+          endpoint: `/${VEHICLES_MODULE}/${id}?fields=${encodeURIComponent(vFields)}`,
+        })
       );
 
       vs.forEach((r) => {
@@ -74,13 +108,11 @@ export const GET = async (req: NextRequest) => {
 
       if (customerIds.length) {
         const cFields = ['id', 'First_Name', 'Last_Name', 'Phone', 'Email'].join(',');
-        const cs = await Promise.all(
-          customerIds.map((id) =>
-            makeZohoServerRequest<any>({
-              method: 'GET',
-              endpoint: `/${CONTACTS_MODULE}/${id}?fields=${encodeURIComponent(cFields)}`,
-            })
-          )
+        const cs = await mapWithConcurrency(customerIds, 6, (id) =>
+          makeZohoServerRequest<any>({
+            method: 'GET',
+            endpoint: `/${CONTACTS_MODULE}/${id}?fields=${encodeURIComponent(cFields)}`,
+          })
         );
 
         cs.forEach((r) => {
@@ -96,8 +128,32 @@ export const GET = async (req: NextRequest) => {
       return { repairOrder: o, vehicle, customer };
     });
 
-    return NextResponse.json({ data: enriched, info: resp.info });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch repair orders' }, { status: 500 });
+    const payload = { data: enriched, info: resp.info };
+    lastCacheKey = cacheKey;
+    lastCacheAt = Date.now();
+    lastCachePayload = payload;
+
+    return NextResponse.json(payload);
+  } catch (err: any) {
+    const statusCode = err?.response?.status;
+    const data = err?.response?.data;
+    console.error('repair-orders/enriched error', {
+      status: statusCode,
+      data,
+      message: err?.message,
+    });
+
+    lastCacheKey = null;
+    lastCacheAt = 0;
+    lastCachePayload = null;
+
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch repair orders',
+        status: statusCode || 500,
+        details: data || err?.message || null,
+      },
+      { status: statusCode || 500 }
+    );
   }
 };

@@ -39,6 +39,8 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
       return 'bg-cyan-500/15 text-cyan-200 ring-cyan-400/25';
     case 'Waiting Approval':
       return 'bg-violet-500/15 text-violet-200 ring-violet-400/25';
+    case 'Repair Approved':
+      return 'bg-fuchsia-500/15 text-fuchsia-200 ring-fuchsia-400/25';
     case 'In Progress':
       return 'bg-lime-500/15 text-lime-200 ring-lime-400/25';
     case 'Ready For Pickup':

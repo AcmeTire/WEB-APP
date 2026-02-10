@@ -41,6 +41,8 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
       return 'bg-cyan-500/15 text-cyan-200 ring-cyan-400/25';
     case 'Waiting Approval':
       return 'bg-violet-500/15 text-violet-200 ring-violet-400/25';
+    case 'Repair Approved':
+      return 'bg-fuchsia-500/15 text-fuchsia-200 ring-fuchsia-400/25';
     case 'In Progress':
       return 'bg-lime-500/15 text-lime-200 ring-lime-400/25';
     case 'Ready For Pickup':
@@ -59,6 +61,7 @@ const STATUS_OPTIONS: Array<RepairOrderStatus | 'All'> = [
   'Dropped Off',
   'Diagnosing',
   'Waiting Approval',
+  'Repair Approved',
   'In Progress',
   'Ready For Pickup',
   'Completed',
@@ -70,6 +73,7 @@ const RO_STATUS_OPTIONS: RepairOrderStatus[] = [
   'Dropped Off',
   'Diagnosing',
   'Waiting Approval',
+  'Repair Approved',
   'In Progress',
   'Ready For Pickup',
   'Completed',
@@ -458,12 +462,14 @@ export default function RepairOrdersPage() {
           return 3;
         case 'Waiting Approval':
           return 4;
-        case 'In Progress':
+        case 'Repair Approved':
           return 5;
-        case 'Ready For Pickup':
+        case 'In Progress':
           return 6;
-        case 'Completed':
+        case 'Ready For Pickup':
           return 7;
+        case 'Completed':
+          return 8;
         default:
           return 99;
       }

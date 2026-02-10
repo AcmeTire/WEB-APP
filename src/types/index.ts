@@ -23,6 +23,7 @@ export type RepairOrderStatus =
   | 'Dropped Off'
   | 'Diagnosing'
   | 'Waiting Approval'
+  | 'Repair Approved'
   | 'In Progress'
   | 'Ready For Pickup'
   | 'Completed';
