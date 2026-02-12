@@ -29,7 +29,6 @@
  };
 
 const STATUS_OPTIONS: RepairOrderStatus[] = [
-  'New',
   'Scheduled',
   'Dropped Off',
   'Diagnosing',
@@ -39,6 +38,11 @@ const STATUS_OPTIONS: RepairOrderStatus[] = [
   'Ready For Pickup',
   'Completed',
 ];
+
+const getStatusOptions = (current: RepairOrderStatus) => {
+  if (current === 'New') return ['New', ...STATUS_OPTIONS];
+  return STATUS_OPTIONS;
+};
 
 export default function RepairOrderDetailPage({
   params,
@@ -230,8 +234,8 @@ export default function RepairOrderDetailPage({
                 onChange={(e) => setStatus(e.target.value as RepairOrderStatus)}
                 disabled={!isEditing}
               >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
+                {getStatusOptions(status).map((s) => (
+                  <option key={s} value={s} disabled={s === 'New'}>
                     {s}
                   </option>
                 ))}

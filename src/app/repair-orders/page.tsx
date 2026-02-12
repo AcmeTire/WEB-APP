@@ -56,7 +56,6 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
 
 const STATUS_OPTIONS: Array<RepairOrderStatus | 'All'> = [
   'All',
-  'New',
   'Scheduled',
   'Dropped Off',
   'Diagnosing',
@@ -68,7 +67,6 @@ const STATUS_OPTIONS: Array<RepairOrderStatus | 'All'> = [
 ];
 
 const RO_STATUS_OPTIONS: RepairOrderStatus[] = [
-  'New',
   'Scheduled',
   'Dropped Off',
   'Diagnosing',
@@ -78,6 +76,11 @@ const RO_STATUS_OPTIONS: RepairOrderStatus[] = [
   'Ready For Pickup',
   'Completed',
 ];
+
+const getRoStatusOptions = (current: RepairOrderStatus) => {
+  if (current === 'New') return ['New', ...RO_STATUS_OPTIONS];
+  return RO_STATUS_OPTIONS;
+};
 
 const RepairOrderRow = ({
   item,
@@ -141,8 +144,8 @@ const RepairOrderRow = ({
                 update.mutate({ id: item.repairOrder.id, status: next });
               }}
             >
-              {RO_STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
+              {getRoStatusOptions(status).map((s) => (
+                <option key={s} value={s} disabled={s === 'New'}>
                   {s}
                 </option>
               ))}
@@ -222,8 +225,8 @@ const RepairOrderRow = ({
                   value={status}
                   onChange={(e) => setStatus(e.target.value as RepairOrderStatus)}
                 >
-                  {RO_STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
+                  {getRoStatusOptions(status).map((s) => (
+                    <option key={s} value={s} disabled={s === 'New'}>
                       {s}
                     </option>
                   ))}
