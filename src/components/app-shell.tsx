@@ -17,6 +17,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isDashboard = pathname === '/dashboard';
+
   const items: NavItem[] = useMemo(
     () => [
       { label: 'Main screen', href: '/' },
@@ -86,27 +88,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <main className="flex-1">
-          <div className="mx-auto max-w-6xl px-6 py-8">
-            <div className="mb-6 flex items-center justify-end">
-              <button
-                type="button"
-                className="rounded-full border border-[#d7b73f]/30 bg-[#d7b73f]/10 px-4 py-2 text-xs font-semibold"
-                style={{ color: '#d7b73f' }}
-                onClick={async () => {
-                  try {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                  } finally {
-                    const next = pathname || '/';
-                    router.replace(`/login?next=${encodeURIComponent(next)}`);
-                    router.refresh();
-                  }
-                }}
-                aria-label="Lock"
-                title="Lock"
-              >
-                Lock
-              </button>
-            </div>
+          <div className={isDashboard ? 'h-dvh px-0 py-0' : 'mx-auto max-w-6xl px-6 py-8'}>
+            {!isDashboard ? (
+              <div className="mb-6 flex items-center justify-end">
+                <button
+                  type="button"
+                  className="rounded-full border border-[#d7b73f]/30 bg-[#d7b73f]/10 px-4 py-2 text-xs font-semibold"
+                  style={{ color: '#d7b73f' }}
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/auth/logout', { method: 'POST' });
+                    } finally {
+                      const next = pathname || '/';
+                      router.replace(`/login?next=${encodeURIComponent(next)}`);
+                      router.refresh();
+                    }
+                  }}
+                  aria-label="Lock"
+                  title="Lock"
+                >
+                  Lock
+                </button>
+              </div>
+            ) : null}
             {children}
           </div>
         </main>

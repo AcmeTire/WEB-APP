@@ -1,6 +1,6 @@
  'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ActiveRepairOrderItem, RepairOrderStatus } from '@/types';
 import { useActiveRepairOrders } from '@/hooks/use-active-repair-orders';
@@ -55,20 +55,46 @@ const statusBadgeClasses = (status: RepairOrderStatus) => {
 export default function DashboardPage() {
   const { data, isLoading, isError, error } = useActiveRepairOrders();
   const [now, setNow] = useState(() => Date.now());
+  const tableHeaderRef = useRef<HTMLDivElement | null>(null);
+  const [rowPx, setRowPx] = useState<number | null>(null);
+  const [scale, setScale] = useState<number>(1);
+  const clampLines = rowPx ? (rowPx >= 92 ? 4 : rowPx >= 72 ? 3 : 2) : 3;
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(id);
   }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-300">Diagnosing &amp; In Progress repair orders</p>
-        </div>
-      </div>
+  useEffect(() => {
+    const recalc = () => {
+      const count = (data || []).length;
+      if (!count) {
+        setRowPx(null);
+        setScale(1);
+        return;
+      }
 
+      const tableHeaderH = tableHeaderRef.current?.getBoundingClientRect().height || 0;
+
+      const viewportH = window.innerHeight;
+      const paddingAllowance = 16;
+      const available = Math.max(0, viewportH - tableHeaderH - paddingAllowance);
+      const nextRowPx = Math.max(44, Math.floor(available / count));
+
+      const base = 56;
+      const nextScale = Math.max(0.78, Math.min(1.25, nextRowPx / base));
+
+      setRowPx(nextRowPx);
+      setScale(nextScale);
+    };
+
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [data]);
+
+  return (
+    <div className="flex h-dvh flex-col overflow-hidden px-6 py-6">
       {isLoading ? (
         <div className="surface p-4 text-sm text-slate-300">Loading…</div>
       ) : isError ? (
@@ -83,15 +109,18 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="surface overflow-hidden">
-          <div className="grid grid-cols-12 gap-3 border-b border-white/10 bg-white/3 px-4 py-3 text-xs font-medium text-slate-300">
+        <div className="surface mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-hidden">
+          <div
+            ref={tableHeaderRef}
+            className="grid grid-cols-12 gap-3 border-b border-white/10 bg-white/3 px-4 py-3 text-xs font-medium text-slate-300"
+          >
             <div className="col-span-2">Status</div>
             <div className="col-span-4">Vehicle</div>
             <div className="col-span-2">Service</div>
             <div className="col-span-3">Description</div>
             <div className="col-span-1 text-right">View</div>
           </div>
-          <div className="divide-y divide-white/10">
+          <div className="min-h-0 flex-1 divide-y divide-white/10">
             {(data || []).map((item) => {
               const vehicleDisplay = formatVehicleDisplay(item.vehicle);
               const vinDisplay = formatVin(item.vehicle?.vin);
@@ -103,9 +132,10 @@ export default function DashboardPage() {
               return (
                 <div
                   key={item.repairOrder.id}
-                  className="grid grid-cols-12 gap-3 px-4 py-3 text-sm"
+                  className="grid grid-cols-12 gap-3 px-4 text-sm overflow-hidden"
+                  style={{ height: rowPx ? `${rowPx}px` : undefined, fontSize: `${14 * scale}px` }}
                 >
-                  <div className="col-span-2">
+                  <div className="col-span-2 min-w-0 overflow-hidden">
                     <span
                       className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset ${statusBadgeClasses(
                         item.repairOrder.status
@@ -113,29 +143,56 @@ export default function DashboardPage() {
                     >
                       {item.repairOrder.status}
                     </span>
-                    <div className="mt-1 text-xs text-slate-400">
+                    <div className="mt-1 text-xs text-slate-400" style={{ fontSize: `${12 * scale}px` }}>
                       {formatDuration(sinceMs)}
                     </div>
                   </div>
-                  <div className="col-span-4">
-                    <div className="font-medium text-slate-100">
+                  <div className="col-span-4 min-w-0 overflow-hidden">
+                    <div className="font-medium text-slate-100 truncate leading-tight">
                       {vehicleDisplay || 'Unknown vehicle'}
                     </div>
-                    <div className="text-xs text-slate-400">Engine: {item.vehicle?.engine_size || '—'}</div>
-                    <div className="text-xs text-slate-400">VIN: {vinDisplay || '—'}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-slate-100">{item.repairOrder.service_type || ''}</div>
-                  </div>
-                  <div className="col-span-3">
                     <div
-                      className="break-words text-slate-100"
+                      className="text-xs text-slate-400 truncate leading-tight"
+                      style={{ fontSize: `${12 * scale}px` }}
+                    >
+                      Engine: {item.vehicle?.engine_size || '—'}
+                    </div>
+                    <div
+                      className="text-xs text-slate-400 truncate leading-tight"
+                      style={{ fontSize: `${12 * scale}px` }}
+                    >
+                      VIN: {vinDisplay || '—'}
+                    </div>
+                  </div>
+                  <div className="col-span-2 min-w-0 overflow-hidden">
+                    <div
+                      className="text-slate-100 leading-tight"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: clampLines,
+                        overflow: 'hidden',
+                      }}
+                      title={item.repairOrder.service_type || ''}
+                    >
+                      {item.repairOrder.service_type || '—'}
+                    </div>
+                  </div>
+                  <div className="col-span-3 min-w-0 overflow-hidden">
+                    <div
+                      className="text-slate-100 leading-tight"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: clampLines,
+                        overflow: 'hidden',
+                      }}
                       title={item.repairOrder.job_description || ''}
                     >
                       {item.repairOrder.job_description || '—'}
                     </div>
                   </div>
-                  <div className="col-span-1 text-right">
+                  <div className="col-span-1 min-w-0 text-right overflow-hidden">
                     <a
                       className="text-sm font-semibold text-[#D4AF37] hover:opacity-90"
                       href={`/repair-orders/${item.repairOrder.id}`}
